@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FirstRound — Mock Interview Coach</title>
+<style>
+  :root{
+    --navy-950:#0d1b2e;
+    --navy-800:#16283f;
+    --navy-700:#1e3556;
+    --slate-300:#a9b8cc;
+    --paper:#f5f2ea;
+    --brass:#b98a4e;
+    --brass-light:#e0b878;
+    --good:#4f8f6d;
+    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:'Inter', -apple-system, Segoe UI, sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  @font-face{ font-family:'Fraunces'; src:local('Georgia'); }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--navy-950);
+    font-family:var(--font-body);
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(185,138,78,0.08), transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(20,40,70,0.06), transparent 45%);
+  }
+
+  /* ===== Header / Masthead ===== */
+  .masthead{
+    background:var(--navy-950);
+    color:var(--paper);
+    padding:28px 24px 24px;
+    border-bottom:3px solid var(--brass);
+    position:relative;
+  }
+  .masthead-inner{
+    max-width:920px;
+    margin:0 auto;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .brand{
+    font-family:var(--font-display);
+    font-size:28px;
+    font-weight:600;
+    letter-spacing:0.3px;
+  }
+  .brand span{color:var(--brass-light);font-style:italic;}
+  .tagline{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--slate-300);
+  }
+
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px;}
+
+  /* ===== Setup Card ===== */
+  .setup-card{
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-radius:4px;
+    box-shadow:0 1px 3px rgba(20,30,50,0.06), 0 10px 30px -12px rgba(20,30,50,0.12);
+    padding:36px;
+    margin-bottom:20px;
+  }
+  .setup-title{
+    font-family:var(--font-display);
+    font-size:24px;
+    margin:0 0 4px;
+  }
+  .setup-sub{
+    color:#6b7280;
+    font-size:14.5px;
+    margin:0 0 28px;
+    line-height:1.5;
+  }
+  .field-group{margin-bottom:22px;}
+  .field-label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--navy-700);
+    margin-bottom:10px;
+  }
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    padding:9px 16px;
+    border:1.5px solid #d8d2c2;
+    border-radius:100px;
+    background:#fff;
+    font-size:13.5px;
+    cursor:pointer;
+    transition:all .15s ease;
+    color:var(--navy-950);
+  }
+  .chip:hover{border-color:var(--brass);}
+  .chip.selected{
+    background:var(--navy-950);
+    border-color:var(--navy-950);
+    color:var(--paper);
+  }
+  input[type=text]{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid #d8d2c2;
+    border-radius:4px;
+    font-size:14.5px;
+    font-family:var(--font-body);
+    background:#fdfcf9;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--brass);}
+  .start-btn{
+    width:100%;
+    padding:15px;
+    background:var(--navy-950);
+    color:var(--paper);
+    border:none;
+    border-radius:4px;
+    font-size:15px;
+    font-family:var(--font-body);
+    font-weight:600;
+    letter-spacing:0.3px;
+    cursor:pointer;
+    margin-top:10px;
+    transition:background .15s;
+  }
+  .start-btn:hover{background:var(--navy-700);}
+  .start-btn:disabled{background:#c9c2b2;cursor:not-allowed;}
+
+  /* ===== Interview View ===== */
+  .interview-view{display:none;}
+  .interview-view.active{display:block;}
+  .setup-card.hidden{display:none;}
+
+  .session-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-radius:4px;
+    padding:14px 20px;
+    margin-bottom:18px;
+    font-size:13px;
+  }
+  .session-meta{color:#6b7280;}
+  .session-meta b{color:var(--navy-950);}
+  .progress-track{
+    width:140px;
+    height:6px;
+    background:#e9e4d6;
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--brass);
+    width:10%;
+    transition:width .4s ease;
+  }
+  .end-link{
+    color:#a34848;
+    font-size:12.5px;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+
+  .chat-panel{
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-radius:4px;
+    min-height:420px;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 1px 3px rgba(20,30,50,0.06);
+  }
+  .chat-log{
+    flex:1;
+    padding:28px 28px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    max-height:520px;
+    overflow-y:auto;
+  }
+  .msg{max-width:78%;line-height:1.55;font-size:14.5px;}
+  .msg-interviewer{
+    align-self:flex-start;
+  }
+  .msg-interviewer .bubble-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--brass);
+    margin-bottom:6px;
+  }
+  .msg-interviewer .bubble{
+    background:var(--navy-950);
+    color:var(--paper);
+    padding:14px 18px;
+    border-radius:2px 12px 12px 12px;
+  }
+  .msg-user{align-self:flex-end;}
+  .msg-user .bubble-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:#8a8375;
+    margin-bottom:6px;
+    text-align:right;
+  }
+  .msg-user .bubble{
+    background:#f0ece0;
+    color:var(--navy-950);
+    padding:14px 18px;
+    border-radius:12px 2px 12px 12px;
+  }
+  .msg-feedback{
+    align-self:flex-start;
+    max-width:88%;
+  }
+  .msg-feedback .bubble{
+    background:#f4f8f5;
+    border:1px solid #d3e6da;
+    border-left:3px solid var(--good);
+    padding:12px 16px;
+    border-radius:2px 8px 8px 8px;
+    font-size:13.5px;
+    color:#2f4a3c;
+  }
+  .msg-feedback .bubble-label{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--good);
+    margin-bottom:5px;
+  }
+
+  .typing-indicator{
+    align-self:flex-start;
+    display:none;
+    gap:4px;
+    padding:14px 18px;
+  }
+  .typing-indicator.active{display:flex;}
+  .typing-indicator span{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--navy-700);
+    animation:blink 1.2s infinite ease-in-out;
+  }
+  .typing-indicator span:nth-child(2){animation-delay:.2s;}
+  .typing-indicator span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
+  .input-row{
+    border-top:1px solid #eee6d4;
+    padding:16px 20px;
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+  }
+  textarea{
+    flex:1;
+    resize:none;
+    border:1.5px solid #d8d2c2;
+    border-radius:4px;
+    padding:12px 14px;
+    font-family:var(--font-body);
+    font-size:14px;
+    min-height:46px;
+    max-height:160px;
+  }
+  textarea:focus{outline:none;border-color:var(--brass);}
+  .send-btn{
+    background:var(--navy-950);
+    color:var(--paper);
+    border:none;
+    border-radius:4px;
+    padding:12px 20px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .send-btn:hover{background:var(--navy-700);}
+  .send-btn:disabled{background:#c9c2b2;cursor:not-allowed;}
+
+  /* ===== Summary ===== */
+  .summary-card{
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-radius:4px;
+    padding:36px;
+    margin-top:20px;
+    display:none;
+  }
+  .summary-card.active{display:block;}
+  .summary-title{font-family:var(--font-display);font-size:22px;margin:0 0 18px;}
+  .restart-btn{
+    background:transparent;
+    border:1.5px solid var(--navy-950);
+    color:var(--navy-950);
+    padding:11px 22px;
+    border-radius:4px;
+    font-size:13.5px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .restart-btn:hover{background:var(--navy-950);color:var(--paper);}
+
+  /* ===== Docs panel ===== */
+  .docs{
+    max-width:920px;
+    margin:40px auto 60px;
+    padding:0 20px;
+  }
+  .docs-toggle{
+    width:100%;
+    text-align:left;
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-radius:4px;
+    padding:16px 20px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--navy-700);
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .docs-toggle:after{content:'+';font-size:18px;color:var(--brass);}
+  .docs-toggle.open:after{content:'−';}
+  .docs-body{
+    display:none;
+    background:#fff;
+    border:1px solid #e3ddce;
+    border-top:none;
+    padding:26px 30px 30px;
+    font-size:14px;
+    line-height:1.7;
+    color:#3a3f4a;
+  }
+  .docs-body.open{display:block;}
+  .docs-body h4{
+    font-family:var(--font-body);
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    color:var(--navy-950);
+    margin:22px 0 8px;
+  }
+  .docs-body h4:first-child{margin-top:0;}
+  .docs-body pre{
+    background:#f7f4ec;
+    border:1px solid #e9e2ce;
+    border-radius:4px;
+    padding:16px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    line-height:1.6;
+    overflow-x:auto;
+    white-space:pre-wrap;
+    color:#2b2f38;
+  }
+  .docs-body ul{padding-left:20px;}
+  .docs-body code{
+    background:#f0ece0;
+    padding:1px 5px;
+    border-radius:3px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+  }
+
+  footer{
+    text-align:center;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:#a39d8c;
+    padding-bottom:40px;
+    letter-spacing:0.5px;
+  }
+
+  @media (max-width:600px){
+    .setup-card,.chat-panel,.summary-card{padding:22px;}
+    .msg{max-width:92%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="brand">FirstRound<span>.</span></div>
+      <div class="tagline">Mock Interview Coach — for first-time job seekers</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- SETUP -->
+  <div class="setup-card" id="setupCard">
+    <h2 class="setup-title">Let's set up your mock interview</h2>
+    <p class="setup-sub">Answer a few quick questions so the interview feels relevant to you. This takes 20 seconds — then we'll begin.</p>
+
+    <div class="field-group">
+      <label class="field-label">Target role</label>
+      <div class="chip-row" id="roleChips">
+        <div class="chip" data-value="Software Engineer (New Grad)">Software Engineer</div>
+        <div class="chip" data-value="Marketing / Business">Marketing / Business</div>
+        <div class="chip" data-value="Data / Analytics">Data / Analytics</div>
+        <div class="chip" data-value="Design">Design</div>
+        <div class="chip" data-value="Other">Other</div>
+      </div>
+      <input type="text" id="roleOther" placeholder="Type your target role…" style="display:none;margin-top:10px;">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Company (optional)</label>
+      <input type="text" id="companyInput" placeholder="e.g. Google, a startup, or leave blank for general practice">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Interview stage</label>
+      <div class="chip-row" id="stageChips">
+        <div class="chip" data-value="HR / Screening round">HR / Screening</div>
+        <div class="chip" data-value="Technical round">Technical</div>
+        <div class="chip" data-value="Behavioral round">Behavioral</div>
+        <div class="chip" data-value="Not sure yet">Not sure yet</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">How are you feeling about interviews?</label>
+      <div class="chip-row" id="confChips">
+        <div class="chip" data-value="Pretty nervous, first time">Pretty nervous — first time</div>
+        <div class="chip" data-value="Somewhat comfortable">Somewhat comfortable</div>
+        <div class="chip" data-value="Confident, want a real challenge">Confident — challenge me</div>
+      </div>
+    </div>
+
+    <button class="start-btn" id="startBtn" disabled>Begin mock interview</button>
+  </div>
+
+  <!-- INTERVIEW -->
+  <div class="interview-view" id="interviewView">
+    <div class="session-bar">
+      <div class="session-meta">Interviewing for <b id="metaRole"></b> <span id="metaCompany"></span></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="end-link" id="endBtn">End &amp; get summary</span>
+      </div>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="input-row">
+        <textarea id="userInput" placeholder="Type your answer here…" rows="1"></textarea>
+        <button class="send-btn" id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary-card" id="summaryCard">
+    <h3 class="summary-title">Session summary</h3>
+    <div id="summaryBody"></div>
+    <button class="restart-btn" id="restartBtn">Start a new mock interview</button>
+  </div>
+
+</div>
+
+<div class="docs">
+  <button class="docs-toggle" id="docsToggle">How this was built</button>
+  <div class="docs-body" id="docsBody">
+
+    <h4>1. The system prompt (the assistant's "brain")</h4>
+    <p>This is the production system prompt sent with every Claude API call in this app. It defines role, scope, tone, question flow, and how to handle edge cases like blank answers, off-topic input, or abuse.</p>
+    <pre id="systemPromptText"></pre>
+
+    <h4>2. Why this UI fits the use case</h4>
+    <ul>
+      <li><b>Chip-based setup instead of a text form</b> — first-time interviewees don't know how to describe what they need. Tappable chips (role, stage, confidence level) remove that blank-page problem and take ~20 seconds.</li>
+      <li><b>Chat framed as a real interview, not a generic bot</b> — the interviewer's messages are visually distinct (navy bubble, "Interviewer" label) from soft green feedback asides, so encouragement never gets confused with the actual question being asked.</li>
+      <li><b>Progress bar, not a message counter</b> — nervous first-timers want to know "how much is left," not chat mechanics.</li>
+      <li><b>Muted, editorial palette (navy/brass/paper)</b> — deliberately avoids a playful/startup look, signaling "this is a real practice room," which matches the professional & polished tone requested.</li>
+      <li><b>Soft feedback bubbles after each answer</b> — because the goal is reducing anxiety, not just testing. Brief encouragement + one concrete tip appears before the next question, rather than a cold pass/fail score.</li>
+    </ul>
+
+    <h4>3. How to extend this</h4>
+    <ul>
+      <li><b>Wire up the real API:</b> replace the <code>mockInterviewerReply()</code> function with a call to <code>https://api.anthropic.com/v1/messages</code>, sending the full conversation history plus the system prompt above each turn.</li>
+      <li><b>Add memory:</b> persist <code>conversationHistory</code> to <code>localStorage</code> or a backend so returning users can resume, and so the assistant can reference "last time you struggled with X."</li>
+      <li><b>Multi-step flow:</b> add a resume/JD upload step before the interview starts, and feed extracted text into the system prompt as additional context so questions are tailored to the user's actual background.</li>
+      <li><b>Tools:</b> add a "generate follow-up resources" tool call at the end of the session that produces a downloadable PDF of missed questions and model answers (reuse the docx/pdf skills in this environment).</li>
+      <li><b>Scoring:</b> if you want a STAR-method score dial instead of qualitative feedback, have the model return structured JSON (<code>{clarity, structure, specificity}</code>) per answer and render it with a small SVG gauge.</li>
+    </ul>
+
+  </div>
+</div>
+
+<footer>FIRSTROUND — BUILT FOR PRACTICE, NOT PRESSURE</footer>
+
+<script>
+const SYSTEM_PROMPT = `You are an experienced, professional interviewer conducting a mock interview to help a first-time job seeker (student or fresher) build confidence and interview readiness.
+
+ROLE & SCOPE
+- You simulate a real, polished interviewer for the specified role, company (if given), and interview stage (HR/screening, technical, or behavioral).
+- Your goal is NOT to trick or fail the candidate. It is to give them realistic practice and constructive, encouraging feedback so they walk away less anxious and better prepared.
+- Ask ONE question at a time. Wait for the candidate's answer before responding.
+
+CONVERSATION FLOW
+1. Open with a brief, warm greeting (1-2 sentences) that sets expectations, then ask your first question.
+2. After each candidate answer:
+   a. Give brief, specific feedback (2-3 sentences max) — what worked, and one concrete improvement (e.g. "Try using the STAR method: Situation, Task, Action, Result").
+   b. Ask the next question. Vary question types across the session: 1 intro/background question, 2-3 role-relevant or behavioral questions, 1 "why this company/role" question, and 1 closing "any questions for me" prompt.
+3. Keep the total session to 5-7 questions unless the candidate asks to continue.
+4. Escalate difficulty gradually only if the candidate selected "confident, challenge me."
+
+TONE
+- Professional and polished, like a real recruiter — never sarcastic, never harsh.
+- If the candidate indicated they are nervous or a first-timer, add extra warmth and reassurance, but do not patronize.
+- Keep responses concise. This is a spoken-style interview, not an essay exchange.
+
+EDGE CASES
+- If the candidate's answer is blank, very short, or says "I don't know": reassure them, offer a hint or simpler rephrasing of the question, and let them retry — do not penalize or lecture.
+- If input is completely off-topic or nonsensical: gently redirect back to the interview question without judgment.
+- If the candidate asks you to end early: acknowledge warmly and wrap up.
+- If the candidate is abusive or the conversation is misused (e.g. asks you to write their whole resume, do unrelated tasks, or engage in harmful content): politely decline, restate your role as an interview coach, and redirect to the mock interview.
+- Never fabricate company-specific facts you're not confident about; speak in general terms about the company/role instead.
+- Do not diagnose, label, or speculate about the candidate's mental state, even if they mention anxiety — simply be supportive.
+
+OUTPUT FORMAT
+- Plain conversational text only. No markdown headers, no bullet lists in your replies — this is a live spoken interview simulation.
+- Structure each turn as: [brief feedback on previous answer, if applicable] + [next question].
+- On the final turn, give a short closing summary: 2-3 strengths observed and 1-2 areas to keep practicing, in an encouraging tone.`;
+
+document.getElementById('systemPromptText').textContent = SYSTEM_PROMPT;
+
+// ---------- Setup screen logic ----------
+let selected = { role:'', company:'', stage:'', confidence:'' };
+
+function wireChips(containerId, key, extra){
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      container.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selected[key] = chip.dataset.value;
+      if(extra) extra(chip);
+      checkReady();
+    });
+  });
+}
+
+wireChips('roleChips','role', (chip)=>{
+  const other = document.getElementById('roleOther');
+  if(chip.dataset.value === 'Other'){
+    other.style.display='block';
+    other.focus();
+    selected.role = other.value;
+  } else {
+    other.style.display='none';
+  }
+});
+document.getElementById('roleOther').addEventListener('input', (e)=>{
+  selected.role = e.target.value;
+  checkReady();
+});
+wireChips('stageChips','stage');
+wireChips('confChips','confidence');
+document.getElementById('companyInput').addEventListener('input', e=>{
+  selected.company = e.target.value;
+});
+
+function checkReady(){
+  const ready = selected.role && selected.stage && selected.confidence;
+  document.getElementById('startBtn').disabled = !ready;
+}
+
+document.getElementById('startBtn').addEventListener('click', startInterview);
+
+// ---------- Interview state ----------
+let questionCount = 0;
+const MAX_QUESTIONS = 6;
+let conversationHistory = [];
+
+function startInterview(){
+  document.getElementById('setupCard').classList.add('hidden');
+  document.getElementById('interviewView').classList.add('active');
+  document.getElementById('metaRole').textContent = selected.role;
+  document.getElementById('metaCompany').textContent = selected.company ? `at ${selected.company}` : '(general practice)';
+
+  const greeting = mockInterviewerReply(true);
+  appendMessage('interviewer', greeting);
+  updateProgress();
+}
+
+function updateProgress(){
+  const pct = Math.min(100, Math.round((questionCount/MAX_QUESTIONS)*100));
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function appendMessage(type, text){
+  const log = document.getElementById('chatLog');
+  const msg = document.createElement('div');
+  if(type === 'interviewer'){
+    msg.className = 'msg msg-interviewer';
+    msg.innerHTML = `<div class="bubble-label">Interviewer</div><div class="bubble"></div>`;
+  } else if(type === 'user'){
+    msg.className = 'msg msg-user';
+    msg.innerHTML = `<div class="bubble-label">You</div><div class="bubble"></div>`;
+  } else {
+    msg.className = 'msg msg-feedback';
+    msg.innerHTML = `<div class="bubble-label">Coach note</div><div class="bubble"></div>`;
+  }
+  msg.querySelector('.bubble').textContent = text;
+  log.appendChild(msg);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showTyping(){
+  const log = document.getElementById('chatLog');
+  const t = document.createElement('div');
+  t.className = 'typing-indicator active';
+  t.id = 'typingIndicator';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  log.appendChild(t);
+  log.scrollTop = log.scrollHeight;
+}
+function hideTyping(){
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+// ---------- Mock "model" logic (replace with real API call) ----------
+const QUESTION_BANK = {
+  opening: (r,c) => `Thanks for joining — I know mock interviews can feel nerve-wracking, so let's keep this relaxed and treat it like good practice. To start, could you walk me through your background and why you're interested in a ${r} role${c?` at ${c}`:''}?`,
+  pool: [
+    (r)=>`Tell me about a time you worked on a team project. What was your role, and what was the outcome?`,
+    (r)=>`What do you consider your biggest strength for a ${r} role, and can you give an example of it in action?`,
+    (r)=>`Describe a challenge or setback you faced — academic or otherwise — and how you handled it.`,
+    (r,c)=>`Why are you interested in ${c ? c : 'this kind of role'} specifically, and what do you hope to learn in your first year?`,
+    (r)=>`Where do you see yourself growing over the next couple of years in a ${r}-type career?`,
+  ],
+  closing: () => `Last one — do you have any questions for me about the role or the team?`
+};
+
+function mockInterviewerReply(isGreeting){
+  if(isGreeting){
+    questionCount = 1;
+    return QUESTION_BANK.opening(selected.role, selected.company);
+  }
+  questionCount++;
+  if(questionCount > MAX_QUESTIONS){
+    return null; // handled by end summary
+  }
+  if(questionCount === MAX_QUESTIONS){
+    return QUESTION_BANK.closing();
+  }
+  const idx = (questionCount - 2) % QUESTION_BANK.pool.length;
+  return QUESTION_BANK.pool[idx](selected.role, selected.company);
+}
+
+function mockFeedback(){
+  const notes = [
+    "Nice — that's a clear example. Try naming the concrete result at the end for extra impact.",
+    "Good instinct to explain the situation first. Keep tightening the ending with a specific outcome or number if you can.",
+    "Solid answer. Structuring it as Situation → Action → Result would make it even punchier.",
+    "That comes across genuine and thoughtful — a great sign for a first interview.",
+    "Good energy. Just watch pacing — a slightly shorter answer often lands stronger."
+  ];
+  return notes[Math.floor(Math.random()*notes.length)];
+}
+
+// ---------- Send flow ----------
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+userInput.addEventListener('input', ()=>{
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight,160)+'px';
+});
+userInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    handleSend();
+  }
+});
+sendBtn.addEventListener('click', handleSend);
+
+function handleSend(){
+  const text = userInput.value.trim();
+  if(!text) return;
+  appendMessage('user', text);
+  conversationHistory.push({role:'user', content:text});
+  userInput.value='';
+  userInput.style.height='auto';
+  sendBtn.disabled = true;
+
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    appendMessage('feedback', mockFeedback());
+
+    setTimeout(()=>{
+      const reply = mockInterviewerReply(false);
+      updateProgress();
+      if(reply === null){
+        endInterview();
+      } else {
+        appendMessage('interviewer', reply);
+        conversationHistory.push({role:'assistant', content:reply});
+      }
+      sendBtn.disabled = false;
+    }, 500);
+  }, 900);
+}
+
+document.getElementById('endBtn').addEventListener('click', endInterview);
+
+function endInterview(){
+  document.getElementById('interviewView').classList.remove('active');
+  const summary = document.getElementById('summaryCard');
+  summary.classList.add('active');
+  document.getElementById('summaryBody').innerHTML = `
+    <p style="color:#4a4f5a;line-height:1.7;">
+    Nice work getting through this practice round for <b>${selected.role}</b>${selected.company ? ` at <b>${selected.company}</b>` : ''}.
+    </p>
+    <p style="color:#4a4f5a;line-height:1.7;">
+    <b>Strengths noticed:</b> clear communication, honest and specific examples, good composure under questions.<br>
+    <b>Keep practicing:</b> closing answers with a concrete result (the "R" in STAR), and trimming longer answers to their strongest 30 seconds.
+    </p>
+    <p style="color:#8a8375;font-size:13px;">In a full deployment, this summary would be generated live by Claude from your actual answers.</p>
+  `;
+}
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('summaryCard').classList.remove('active');
+  document.getElementById('setupCard').classList.remove('hidden');
+  document.getElementById('chatLog').innerHTML='';
+  questionCount = 0;
+  conversationHistory = [];
+  selected = { role:'', company:'', stage:'', confidence:'' };
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('roleOther').style.display='none';
+  document.getElementById('roleOther').value='';
+  document.getElementById('companyInput').value='';
+  document.getElementById('startBtn').disabled = true;
+});
+
+// ---------- Docs toggle ----------
+document.getElementById('docsToggle').addEventListener('click', ()=>{
+  document.getElementById('docsToggle').classList.toggle('open');
+  document.getElementById('docsBody').classList.toggle('open');
+});
+</script>
+
+</body>
+</html>
