@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Learning Studio — JavaScript Closures &amp; Scope</title>
+<style>
+  :root{
+    --ink:#0d1117;
+    --ink-2:#12181f;
+    --panel:#161d26;
+    --panel-2:#1c2530;
+    --line: rgba(230,237,243,0.08);
+    --line-strong: rgba(230,237,243,0.16);
+    --text:#e6edf3;
+    --muted:#8b96a3;
+    --muted-2:#5f6b78;
+    --gold:#e3b341;
+    --gold-dim: rgba(227,179,65,0.15);
+    --mint:#7ee3c9;
+    --mint-dim: rgba(126,227,201,0.14);
+    --coral:#ef8171;
+    --coral-dim: rgba(239,129,113,0.15);
+    --radius: 14px;
+    --serif: "Fraunces", Georgia, serif;
+    --display: "Space Grotesk", "Inter", sans-serif;
+    --body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(126,227,201,0.06), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(227,179,65,0.05), transparent 45%),
+      var(--ink);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.6;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  ::selection{background:var(--gold-dim); color:var(--gold);}
+  a{color:var(--mint);}
+  img,svg{display:block; max-width:100%;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:100;
+    background:rgba(13,17,23,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; letter-spacing:0.2px;}
+  .brand-mark{
+    width:30px; height:30px; border-radius:8px;
+    background: linear-gradient(135deg, var(--gold), var(--mint));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:13px; color:#0d1117; font-weight:700;
+  }
+  .brand-sub{color:var(--muted); font-size:12.5px; font-weight:400; font-family:var(--body);}
+  .top-progress{flex:1; max-width:420px; display:flex; align-items:center; gap:10px;}
+  .top-progress-track{flex:1; height:6px; border-radius:99px; background:var(--panel-2); overflow:hidden; border:1px solid var(--line);}
+  .top-progress-fill{height:100%; width:0%; background:linear-gradient(90deg, var(--mint), var(--gold)); transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .top-progress-label{font-size:12px; color:var(--muted); font-family:var(--mono); white-space:nowrap;}
+  .topbar-actions{display:flex; gap:8px; align-items:center;}
+  .icon-btn{
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    width:36px; height:36px; border-radius:9px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+    transition:all .15s ease;
+  }
+  .icon-btn:hover{border-color:var(--line-strong); color:var(--text); transform:translateY(-1px);}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px;}
+  .wrap-wide{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- Hero / intro ---------- */
+  .hero{padding:64px 0 40px; position:relative;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--mint); background:var(--mint-dim); border:1px solid rgba(126,227,201,0.25);
+    padding:6px 12px; border-radius:99px; margin-bottom:22px;
+  }
+  .eyebrow::before{content:"●"; font-size:8px; color:var(--mint);}
+  h1.hero-title{
+    font-family:var(--display); font-weight:600; font-size:clamp(32px,5vw,52px);
+    line-height:1.08; letter-spacing:-0.02em; max-width:14ch; margin-bottom:18px;
+  }
+  .hero-title .accent{color:var(--gold); font-style:italic; font-family:var(--serif); font-weight:500;}
+  .hero-desc{font-size:17px; color:var(--muted); max-width:56ch; margin-bottom:36px;}
+
+  .stat-row{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:36px;}
+  .stat-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; min-width:150px; flex:1;
+  }
+  .stat-card .num{font-family:var(--display); font-size:22px; font-weight:600; color:var(--text);}
+  .stat-card .lbl{font-size:12.5px; color:var(--muted); margin-top:2px;}
+
+  .info-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:36px;}
+  @media (max-width:640px){.info-grid{grid-template-columns:1fr;}}
+  .info-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px;}
+  .info-card h3{font-family:var(--display); font-size:14.5px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .info-card ul{list-style:none;}
+  .info-card li{font-size:14px; color:var(--muted); padding:6px 0 6px 20px; position:relative;}
+  .info-card li::before{content:"—"; position:absolute; left:0; color:var(--muted-2);}
+
+  .reward-card{
+    border:1px solid rgba(227,179,65,0.3); background:linear-gradient(135deg, var(--gold-dim), transparent);
+    border-radius:var(--radius); padding:22px; margin-bottom:44px; display:flex; gap:18px; align-items:center;
+  }
+  .reward-jar{
+    width:56px; height:56px; flex-shrink:0; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(227,179,65,0.4), rgba(227,179,65,0.08));
+    border:1px solid rgba(227,179,65,0.35);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+  }
+  .reward-card h3{font-family:var(--display); font-size:15px; margin-bottom:4px;}
+  .reward-card p{font-size:13.5px; color:var(--muted);}
+
+  .btn{
+    font-family:var(--display); font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--gold), #d4a339); color:#0d1117;
+    border:none; padding:14px 28px; border-radius:10px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 0 0 rgba(227,179,65,0);
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 8px 24px -8px rgba(227,179,65,0.5);}
+  .btn-ghost{
+    background:transparent; color:var(--text); border:1px solid var(--line-strong);
+    font-family:var(--display); font-weight:600; font-size:14px; padding:12px 22px; border-radius:10px; cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--mint); color:var(--mint);}
+  .btn-sm{padding:9px 16px; font-size:13px; border-radius:8px;}
+
+  /* ---------- Module nav / roadmap ---------- */
+  .roadmap{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:56px;}
+  @media (max-width:760px){.roadmap{grid-template-columns:1fr 1fr;}}
+  .road-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; cursor:pointer; transition:all .18s ease; position:relative; overflow:hidden;
+  }
+  .road-card:hover{border-color:var(--line-strong); transform:translateY(-3px);}
+  .road-card.locked{opacity:0.45; cursor:not-allowed;}
+  .road-card.locked:hover{transform:none;}
+  .road-card.done{border-color:rgba(126,227,201,0.4);}
+  .road-num{font-family:var(--mono); font-size:11px; color:var(--muted-2); margin-bottom:10px;}
+  .road-title{font-family:var(--display); font-size:15px; font-weight:600; margin-bottom:6px;}
+  .road-desc{font-size:12.5px; color:var(--muted);}
+  .road-status{position:absolute; top:14px; right:14px; font-size:15px;}
+
+  /* ---------- Module sections ---------- */
+  .module{
+    padding:70px 0 40px; border-top:1px solid var(--line); scroll-margin-top:90px;
+    display:none;
+  }
+  .module.active{display:block;}
+  .module-head{margin-bottom:36px;}
+  .module-badge{
+    font-family:var(--mono); font-size:12px; color:var(--gold); background:var(--gold-dim);
+    border:1px solid rgba(227,179,65,0.25); padding:5px 11px; border-radius:99px; display:inline-block; margin-bottom:16px;
+  }
+  h2.module-title{font-family:var(--display); font-size:clamp(26px,3.4vw,36px); font-weight:600; letter-spacing:-0.01em; margin-bottom:12px;}
+  .module-lead{font-size:16px; color:var(--muted); max-width:62ch;}
+
+  h3.sec-title{font-family:var(--display); font-size:19px; font-weight:600; margin:40px 0 14px; display:flex; align-items:center; gap:10px;}
+  h3.sec-title .tag{
+    font-family:var(--mono); font-size:11px; color:var(--muted); background:var(--panel-2);
+    border:1px solid var(--line); padding:3px 9px; border-radius:6px; font-weight:400;
+  }
+  p.body-text{font-size:15px; color:#c4cdd6; margin-bottom:14px; max-width:70ch;}
+  p.body-text strong{color:var(--text); font-weight:600;}
+  p.body-text code, li code{
+    font-family:var(--mono); font-size:0.87em; background:var(--panel-2); color:var(--mint);
+    padding:2px 6px; border-radius:5px; border:1px solid var(--line);
+  }
+
+  .code-block{
+    background:#0a0d12; border:1px solid var(--line); border-radius:12px;
+    margin:18px 0; overflow:hidden;
+  }
+  .code-block .code-head{
+    padding:9px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--mono); font-size:11.5px; color:var(--muted-2);
+  }
+  .code-block pre{padding:18px 20px; overflow-x:auto; font-family:var(--mono); font-size:13.2px; line-height:1.65; color:#d5dee6;}
+  .code-block .c-kw{color:#ef8171;}
+  .code-block .c-fn{color:#7ee3c9;}
+  .code-block .c-str{color:#e3b341;}
+  .code-block .c-cm{color:#5f6b78; font-style:italic;}
+  .code-block .c-num{color:#c9a4ff;}
+
+  .analogy-box{
+    background:linear-gradient(135deg, var(--mint-dim), transparent); border:1px solid rgba(126,227,201,0.25);
+    border-radius:var(--radius); padding:20px 22px; margin:20px 0; display:flex; gap:16px;
+  }
+  .analogy-box .ic{font-size:22px; flex-shrink:0;}
+  .analogy-box h4{font-family:var(--display); font-size:14px; color:var(--mint); margin-bottom:6px;}
+  .analogy-box p{font-size:14px; color:#c4cdd6;}
+
+  .misconception-box{
+    background:linear-gradient(135deg, var(--coral-dim), transparent); border:1px solid rgba(239,129,113,0.28);
+    border-radius:var(--radius); padding:20px 22px; margin:20px 0;
+  }
+  .misconception-box h4{font-family:var(--display); font-size:14px; color:var(--coral); margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+  .misconception-box .item{margin-bottom:10px; font-size:14px; color:#c4cdd6;}
+  .misconception-box .item strong{color:var(--text);}
+
+  .compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0;}
+  @media (max-width:640px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .compare-card h4{font-family:var(--mono); font-size:12.5px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--line);}
+  .compare-card ul{list-style:none;}
+  .compare-card li{font-size:13.5px; color:var(--muted); padding:5px 0;}
+
+  .takeaway-box{
+    background:var(--panel); border:1px solid var(--line-strong); border-radius:var(--radius);
+    padding:22px; margin:28px 0;
+  }
+  .takeaway-box h4{font-family:var(--display); font-size:14.5px; margin-bottom:12px; color:var(--gold);}
+  .takeaway-box ol{padding-left:20px;}
+  .takeaway-box li{font-size:14px; color:#c4cdd6; padding:4px 0;}
+
+  /* ---------- Exercise / playground ---------- */
+  .exercise{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:24px; margin:26px 0;
+  }
+  .exercise-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .exercise-head .ic{font-size:18px;}
+  .exercise-head h4{font-family:var(--display); font-size:15px;}
+  .exercise textarea{
+    width:100%; min-height:120px; background:#0a0d12; border:1px solid var(--line); border-radius:9px;
+    color:var(--text); font-family:var(--mono); font-size:13px; padding:14px; resize:vertical; line-height:1.6;
+  }
+  .exercise textarea:focus{outline:none; border-color:var(--mint);}
+  .exercise-controls{display:flex; gap:10px; margin-top:12px; align-items:center; flex-wrap:wrap;}
+  .exercise-output{
+    margin-top:12px; background:#0a0d12; border:1px solid var(--line); border-radius:9px;
+    padding:12px 14px; font-family:var(--mono); font-size:13px; min-height:24px; color:var(--mint); white-space:pre-wrap;
+  }
+  .exercise-output.err{color:var(--coral);}
+  .exercise-hint{font-size:12.5px; color:var(--muted); margin-top:10px; cursor:pointer; text-decoration:underline dotted;}
+  .exercise-hint-content{font-size:13px; color:var(--muted); margin-top:8px; display:none; background:var(--panel-2); padding:10px 12px; border-radius:8px;}
+
+  /* ---------- Interactive scope diagram ---------- */
+  .diagram-wrap{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin:22px 0; overflow-x:auto;
+  }
+  .diagram-caption{font-size:12.5px; color:var(--muted); margin-top:12px; text-align:center;}
+  .scope-box{transition:all .3s ease; cursor:pointer;}
+  .scope-box:hover rect{filter:brightness(1.15);}
+  .firefly{animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);}}
+
+  /* ---------- Quiz ---------- */
+  .quiz-section{
+    background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    padding:32px; margin:48px 0 20px;
+  }
+  .quiz-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:10px;}
+  .quiz-head h3{font-family:var(--display); font-size:20px;}
+  .quiz-progress-dots{display:flex; gap:6px;}
+  .qdot{width:8px; height:8px; border-radius:50%; background:var(--panel-2); border:1px solid var(--line);}
+  .qdot.answered{background:var(--mint);}
+  .qdot.current{border-color:var(--gold);}
+
+  .question-block{display:none;}
+  .question-block.active{display:block;}
+  .q-text{font-size:16.5px; font-weight:500; margin-bottom:18px; font-family:var(--display);}
+  .q-options{display:flex; flex-direction:column; gap:10px;}
+  .q-option{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:14px 16px;
+    cursor:pointer; font-size:14.5px; transition:all .15s ease; display:flex; align-items:center; gap:12px;
+  }
+  .q-option:hover{border-color:var(--line-strong);}
+  .q-option .letter{
+    width:24px; height:24px; border-radius:6px; background:var(--panel); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; flex-shrink:0;
+  }
+  .q-option.correct{border-color:var(--mint); background:var(--mint-dim);}
+  .q-option.correct .letter{background:var(--mint); color:#0d1117;}
+  .q-option.incorrect{border-color:var(--coral); background:var(--coral-dim);}
+  .q-option.incorrect .letter{background:var(--coral); color:#0d1117;}
+  .q-option.disabled{cursor:default;}
+  .q-explain{
+    margin-top:16px; padding:14px 16px; border-radius:10px; background:var(--panel-2); border:1px solid var(--line);
+    font-size:13.5px; color:var(--muted); display:none;
+  }
+  .q-explain.show{display:block;}
+  .q-nav{display:flex; justify-content:flex-end; margin-top:20px;}
+
+  .quiz-results{display:none; text-align:center; padding:20px 0;}
+  .quiz-results.show{display:block;}
+  .score-ring-wrap{position:relative; width:140px; height:140px; margin:0 auto 20px;}
+  .score-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; font-family:var(--display); font-size:30px; font-weight:600;}
+  .score-num span{font-size:11px; color:var(--muted); font-weight:400; font-family:var(--body);}
+  .quiz-results h3{font-family:var(--display); font-size:19px; margin-bottom:8px;}
+  .quiz-results p{color:var(--muted); font-size:14px; margin-bottom:22px;}
+
+  /* ---------- Final / resources ---------- */
+  .final-section{padding:70px 0; border-top:1px solid var(--line);}
+  .cheat-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:24px 0;}
+  @media (max-width:640px){.cheat-grid{grid-template-columns:1fr;}}
+  .cheat-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .cheat-card h4{font-family:var(--mono); font-size:12.5px; color:var(--gold); margin-bottom:10px;}
+  .cheat-card pre{font-family:var(--mono); font-size:12.3px; color:#c4cdd6; white-space:pre-wrap; line-height:1.6;}
+
+  .resource-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:16px 0 32px;}
+  @media (max-width:760px){.resource-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:480px){.resource-grid{grid-template-columns:1fr;}}
+  .resource-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .resource-card h5{font-family:var(--display); font-size:13px; color:var(--mint); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;}
+  .resource-card ul{list-style:none;}
+  .resource-card li{font-size:13px; color:var(--muted); padding:5px 0;}
+
+  .keyword-chip{
+    display:inline-block; font-family:var(--mono); font-size:12px; background:var(--panel-2); color:var(--mint);
+    border:1px solid var(--line); padding:6px 12px; border-radius:99px; margin:4px 6px 4px 0;
+  }
+
+  .footer{text-align:center; padding:50px 0 20px; color:var(--muted-2); font-size:12.5px;}
+
+  /* Toast */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px);
+    background:var(--panel); border:1px solid var(--gold); color:var(--text);
+    padding:14px 22px; border-radius:12px; font-size:14px; z-index:200; display:flex; align-items:center; gap:10px;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1); box-shadow:0 10px 40px rgba(0,0,0,0.4);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  @media print{
+    .topbar,.roadmap,.exercise-controls,.q-nav,button{display:none !important;}
+    .module{display:block !important;}
+    body{background:#fff; color:#111;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">λ</div>
+    <div>Interactive Learning Studio
+      <div class="brand-sub">JavaScript Closures &amp; Scope</div>
+    </div>
+  </div>
+  <div class="top-progress">
+    <div class="top-progress-track"><div class="top-progress-fill" id="topProgressFill"></div></div>
+    <div class="top-progress-label" id="topProgressLabel">0% complete</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="window.print()" title="Print notes">🖨</button>
+    <button class="icon-btn" onclick="resetProgress()" title="Reset progress">↺</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= HERO / INTRO ================= -->
+  <section class="hero" id="intro">
+    <div class="eyebrow">Programming — JavaScript</div>
+    <h1 class="hero-title">Closures &amp; Scope, <span class="accent">completely</span> understood</h1>
+    <p class="hero-desc">A single, self-contained tutorial that takes you from "what even is scope?" to writing closures on purpose — module counters, memoized functions, and private state — with zero hand-waving.</p>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="num">~70 min</div><div class="lbl">Estimated completion time</div></div>
+      <div class="stat-card"><div class="num">4</div><div class="lbl">Progressive modules</div></div>
+      <div class="stat-card"><div class="num">16</div><div class="lbl">Quiz questions</div></div>
+      <div class="stat-card"><div class="num">1</div><div class="lbl">Final challenge</div></div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>🎯 Learning objectives</h3>
+        <ul>
+          <li>Explain how the JS engine resolves a variable through the scope chain</li>
+          <li>Distinguish global, function, block, and module scope</li>
+          <li>Define a closure precisely and spot one in unfamiliar code</li>
+          <li>Use closures deliberately: private state, factories, memoization</li>
+          <li>Diagnose the classic <code>var</code>-in-a-loop closure bug and fix it</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <h3>🧭 Prerequisites &amp; outcomes</h3>
+        <ul>
+          <li><strong>Needs:</strong> comfort writing JS functions and variables</li>
+          <li><strong>Needs:</strong> basic familiarity with <code>{ }</code> blocks and loops</li>
+          <li><strong>Outcome:</strong> you can build a counter, cache, or module without a class</li>
+          <li><strong>Outcome:</strong> you can read a scope diagram and predict output</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="reward-card">
+      <div class="reward-jar">🫙</div>
+      <div>
+        <h3>The Firefly Jar reward system</h3>
+        <p>Every quiz you clear catches a "firefly" — a captured variable — in your jar. Score 100% on a module quiz to catch a golden firefly. Fill the jar across all 4 modules plus the final challenge to complete the studio. Your jar persists in this browser via local storage.</p>
+      </div>
+    </div>
+    <div id="jarDisplay" style="margin-bottom:40px; font-size:22px; letter-spacing:4px;"></div>
+
+    <button class="btn" onclick="goToModule(1)">Begin Module 1 →</button>
+  </section>
+
+  <!-- ================= ROADMAP ================= -->
+  <div class="roadmap" id="roadmap"></div>
+
+</div>
+
+<!-- ================= MODULE 1 ================= -->
+<section class="module" id="module-1" data-module="1">
+  <div class="wrap">
+    <div class="module-head">
+      <div class="module-badge">MODULE 1 · FOUNDATION</div>
+      <h2 class="module-title">What scope actually is</h2>
+      <p class="module-lead">Before closures make sense, you need a working mental model of how JavaScript decides which variable a name refers to. This module builds that model from scratch.</p>
+    </div>
+
+    <h3 class="sec-title">The scope chain <span class="tag">core concept</span></h3>
+    <p class="body-text">Every time JavaScript runs a function, it creates a fresh <strong>lexical environment</strong> — an invisible record of every variable declared in that function, plus a hidden link back to the environment it was <em>written inside of</em>. "Lexical" just means <strong>determined by where you typed the code</strong>, not by who called it or when.</p>
+    <p class="body-text">When your code reads a variable, the engine looks in the current environment first. Not found? It follows the hidden link outward, one level at a time, until it either finds the variable or runs out of levels (a <code>ReferenceError</code>). This outward path is the <strong>scope chain</strong>.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span>scope-chain.js</span><span>run mentally, then check module 1 exercise</span></div>
+      <pre><span class="c-kw">const</span> city = <span class="c-str">"Nairobi"</span>;
+
+<span class="c-kw">function</span> <span class="c-fn">outer</span>() {
+  <span class="c-kw">const</span> country = <span class="c-str">"Kenya"</span>;
+
+  <span class="c-kw">function</span> <span class="c-fn">inner</span>() {
+    <span class="c-kw">const</span> greeting = <span class="c-str">"Habari"</span>;
+    <span class="c-cm">// inner can see greeting, country, AND city</span>
+    <span class="c-fn">console</span>.log(greeting, country, city);
+  }
+  <span class="c-fn">inner</span>();
+}
+<span class="c-fn">outer</span>(); <span class="c-cm">// "Habari Kenya Nairobi"</span></pre>
+    </div>
+
+    <div class="analogy-box">
+      <div class="ic">🏠</div>
+      <div>
+        <h4>The apartment building analogy</h4>
+        <p>Think of each function as a room in a building. A room can see everything in its own furniture (its own variables) plus everything in every room <em>above</em> it on the way to the lobby — because that's the path it was built through. It can never see into a sibling room on the same floor, and the lobby can't see into anyone's apartment. The path is fixed the moment the building is constructed (when you write the code), not when someone walks through it (when you call the function).</p>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 720 260" style="width:100%; height:auto;">
+        <g class="scope-box" onclick="pulseBox('gscope')">
+          <rect id="gscope" x="20" y="20" width="680" height="220" rx="14" fill="rgba(126,227,201,0.06)" stroke="#7ee3c9" stroke-width="1.4"/>
+          <text x="40" y="44" fill="#7ee3c9" font-family="JetBrains Mono, monospace" font-size="12">GLOBAL SCOPE — city = "Nairobi"</text>
+        </g>
+        <g class="scope-box" onclick="pulseBox('fscope')">
+          <rect id="fscope" x="60" y="64" width="600" height="150" rx="12" fill="rgba(227,179,65,0.06)" stroke="#e3b341" stroke-width="1.4"/>
+          <text x="80" y="88" fill="#e3b341" font-family="JetBrains Mono, monospace" font-size="12">outer() SCOPE — country = "Kenya"</text>
+        </g>
+        <g class="scope-box" onclick="pulseBox('iscope')">
+          <rect id="iscope" x="100" y="108" width="520" height="90" rx="10" fill="rgba(239,129,113,0.07)" stroke="#ef8171" stroke-width="1.4"/>
+          <text x="120" y="132" fill="#ef8171" font-family="JetBrains Mono, monospace" font-size="12">inner() SCOPE — greeting = "Habari"</text>
+          <text x="120" y="156" fill="#8b96a3" font-family="JetBrains Mono, monospace" font-size="11">console.log(greeting, country, city) →</text>
+          <text x="120" y="176" fill="#e6edf3" font-family="JetBrains Mono, monospace" font-size="11">looks here, then out, then out again</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Click a ring to highlight it. Nesting = the scope chain. Inner rings see outer rings, never the reverse.</div>
+    </div>
+
+    <h3 class="sec-title">Function scope vs. block scope <span class="tag">comparison</span></h3>
+    <p class="body-text"><code>var</code> only respects <strong>function</strong> boundaries — it leaks out of <code>if</code> blocks and loops. <code>let</code> and <code>const</code> respect <strong>block</strong> boundaries — every <code>{ }</code> is a new scope. This single difference causes most of the "weird closure bug" moments beginners hit.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4 style="color:#ef8171">var — function-scoped</h4>
+        <ul>
+          <li>Visible anywhere in the enclosing function</li>
+          <li>Ignores <code>if</code>, <code>for</code>, <code>while</code> block boundaries</li>
+          <li>Hoisted and initialized to <code>undefined</code></li>
+          <li>Can be redeclared without error</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4 style="color:#7ee3c9">let / const — block-scoped</h4>
+        <ul>
+          <li>Visible only inside the nearest <code>{ }</code></li>
+          <li>Respects every block, including bare ones</li>
+          <li>Hoisted but sits in a "temporal dead zone"</li>
+          <li>Redeclaring in the same scope throws</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="misconception-box">
+      <h4>⚠ Common misconceptions</h4>
+      <div class="item"><strong>"Curly braces always make a new scope for var."</strong> False — <code>var</code> ignores block braces entirely; only function bodies stop it.</div>
+      <div class="item"><strong>"Scope depends on who calls the function."</strong> False — scope is lexical: fixed by where the code is written, never by the call site. That's what "closure" ultimately exploits.</div>
+      <div class="item"><strong>"Global variables are scope-free."</strong> False — the global scope is just the outermost ring in the same chain; it's still one link, not a special exception.</div>
+    </div>
+
+    <h3 class="sec-title">Exercise: predict the output <span class="tag">practice</span></h3>
+    <div class="exercise">
+      <div class="exercise-head"><span class="ic">🧪</span><h4>Edit and run — predict before you click</h4></div>
+      <textarea id="ex1code">let mode = "day";
+function report() {
+  if (true) {
+    var mode = "night";
+    let level = "high";
+  }
+  console.log("mode:", mode);
+}
+report();
+// console.log(level) here would throw — try uncommenting it</textarea>
+      <div class="exercise-controls">
+        <button class="btn btn-sm" onclick="runExercise('ex1code','ex1out')">▶ Run</button>
+        <button class="btn-ghost btn-sm" onclick="resetExercise('ex1code', ex1default)">Reset</button>
+        <span class="exercise-hint" onclick="toggleHint('ex1hint')">Need a hint?</span>
+      </div>
+      <div class="exercise-output" id="ex1out">Output will appear here.</div>
+      <div class="exercise-hint-content" id="ex1hint">The inner <code>var mode</code> is the *same* variable as any outer function-scoped one — it overwrites it. <code>let level</code> is trapped inside the <code>if</code> block and doesn't exist outside it.</div>
+    </div>
+
+    <div class="takeaway-box">
+      <h4>✅ Key takeaways</h4>
+      <ol>
+        <li>Scope is lexical — decided by where code is written, not where it runs.</li>
+        <li>Lookups walk outward through the scope chain until found or exhausted.</li>
+        <li><code>var</code> is function-scoped; <code>let</code>/<code>const</code> are block-scoped.</li>
+        <li>The global scope is just the last stop on the chain, not a special zone.</li>
+      </ol>
+    </div>
+
+    <div class="quiz-section" id="quiz-1"></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 2 ================= -->
+<section class="module" id="module-2" data-module="2">
+  <div class="wrap">
+    <div class="module-head">
+      <div class="module-badge">MODULE 2 · CORE MECHANISM</div>
+      <h2 class="module-title">What a closure actually is</h2>
+      <p class="module-lead">Now the payoff: a closure is simply a function that <em>remembers</em> the scope it was created in — even after that outer function has finished running.</p>
+    </div>
+
+    <h3 class="sec-title">The definition, precisely <span class="tag">core concept</span></h3>
+    <p class="body-text">A <strong>closure</strong> is the combination of a function bundled together with references to its surrounding lexical scope. Every function in JavaScript forms a closure the moment it's created — most of the time you just don't notice, because the outer scope disappears right away. Closures become visible when the inner function <em>outlives</em> the outer one: gets returned, stored, or passed somewhere else.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span>closure-basics.js</span><span>the canonical example</span></div>
+      <pre><span class="c-kw">function</span> <span class="c-fn">makeCounter</span>() {
+  <span class="c-kw">let</span> count = <span class="c-num">0</span>;         <span class="c-cm">// lives in makeCounter's scope</span>
+  <span class="c-kw">return</span> <span class="c-kw">function</span>() {
+    count++;                <span class="c-cm">// inner fn reads/writes the SAME count</span>
+    <span class="c-kw">return</span> count;
+  };
+}
+
+<span class="c-kw">const</span> counterA = <span class="c-fn">makeCounter</span>();
+<span class="c-kw">const</span> counterB = <span class="c-fn">makeCounter</span>();
+<span class="c-fn">console</span>.log(counterA()); <span class="c-cm">// 1</span>
+<span class="c-fn">console</span>.log(counterA()); <span class="c-cm">// 2</span>
+<span class="c-fn">console</span>.log(counterB()); <span class="c-cm">// 1 — its own separate count</span></pre>
+    </div>
+
+    <p class="body-text"><code>makeCounter</code> finishes executing on line 1 of usage, yet <code>count</code> never gets garbage-collected — because the returned function still holds a live reference to it. Each call to <code>makeCounter()</code> creates a <strong>brand new</strong> lexical environment, so <code>counterA</code> and <code>counterB</code> close over two entirely separate <code>count</code> variables.</p>
+
+    <div class="analogy-box">
+      <div class="ic">🫙</div>
+      <div>
+        <h4>The firefly jar analogy</h4>
+        <p>Imagine <code>count</code> as a firefly glowing inside <code>makeCounter</code>'s room. Normally when you leave a room, the door shuts and whatever's inside eventually fades. But a closure is like catching that firefly in a jar and taking it with you — the returned function <em>is</em> the jar. Wherever that function goes, the firefly keeps glowing, still reachable, still alive, invisible to everyone except the one holding the jar.</p>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 720 220" style="width:100%; height:auto;">
+        <rect x="30" y="30" width="280" height="130" rx="12" fill="rgba(227,179,65,0.05)" stroke="#3a4048" stroke-width="1"/>
+        <text x="50" y="54" fill="#8b96a3" font-family="JetBrains Mono, monospace" font-size="11">makeCounter() call finishes...</text>
+        <text x="50" y="76" fill="#5f6b78" font-family="JetBrains Mono, monospace" font-size="11" text-decoration="line-through">room closes ✗</text>
+        <g class="firefly">
+          <circle cx="150" cy="115" r="14" fill="#e3b341" opacity="0.85"/>
+          <text x="150" y="119" text-anchor="middle" font-size="10" fill="#0d1117" font-family="JetBrains Mono">count</text>
+        </g>
+        <path d="M310 100 L 400 100" stroke="#7ee3c9" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="320" y="88" fill="#7ee3c9" font-family="JetBrains Mono, monospace" font-size="10">captured by</text>
+        <rect x="410" y="30" width="280" height="130" rx="40" fill="rgba(126,227,201,0.06)" stroke="#7ee3c9" stroke-width="1.6"/>
+        <text x="430" y="54" fill="#7ee3c9" font-family="JetBrains Mono, monospace" font-size="11">returned inner function</text>
+        <text x="430" y="72" fill="#8b96a3" font-family="JetBrains Mono, monospace" font-size="10">"the jar" — held by counterA</text>
+        <g class="firefly">
+          <circle cx="550" cy="115" r="14" fill="#e3b341"/>
+          <text x="550" y="119" text-anchor="middle" font-size="10" fill="#0d1117" font-family="JetBrains Mono">count</text>
+        </g>
+        <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7ee3c9"/></marker></defs>
+      </svg>
+      <div class="diagram-caption">The outer room "closes," but the firefly (variable) survives because the returned function carries a live reference to it.</div>
+    </div>
+
+    <h3 class="sec-title">Closures vs. plain functions <span class="tag">comparison</span></h3>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4 style="color:#ef8171">Ordinary function call</h4>
+        <ul>
+          <li>Local variables die when the function returns</li>
+          <li>No hidden state between calls</li>
+          <li>Same inputs always start from the same blank slate</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4 style="color:#7ee3c9">Function created inside another</h4>
+        <ul>
+          <li>Keeps a live link to the outer variables it uses</li>
+          <li>State persists across multiple calls to the inner fn</li>
+          <li>Each outer call creates an independent, private copy</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="misconception-box">
+      <h4>⚠ Common misconceptions</h4>
+      <div class="item"><strong>"A closure copies the variable's value."</strong> False — it keeps a live reference. If the outer variable changes later, the closure sees the new value, not a snapshot.</div>
+      <div class="item"><strong>"Only functions that return a function are closures."</strong> False — any nested function referencing an outer variable is a closure, whether it's returned, passed as a callback, or attached to an event.</div>
+      <div class="item"><strong>"Closures need a special keyword."</strong> False — closures are automatic and free; there is no <code>closure</code> keyword, they're just how JS functions always behave.</div>
+    </div>
+
+    <h3 class="sec-title">Exercise: build your own counter <span class="tag">practice</span></h3>
+    <div class="exercise">
+      <div class="exercise-head"><span class="ic">🧪</span><h4>Modify makeCounter to accept a starting value and a step</h4></div>
+      <textarea id="ex2code">function makeCounter(start = 0, step = 1) {
+  let count = start;
+  return function () {
+    count += step;
+    return count;
+  };
+}
+
+const byFives = makeCounter(0, 5);
+console.log(byFives());
+console.log(byFives());
+console.log(byFives());</textarea>
+      <div class="exercise-controls">
+        <button class="btn btn-sm" onclick="runExercise('ex2code','ex2out')">▶ Run</button>
+        <button class="btn-ghost btn-sm" onclick="resetExercise('ex2code', ex2default)">Reset</button>
+        <span class="exercise-hint" onclick="toggleHint('ex2hint')">Need a hint?</span>
+      </div>
+      <div class="exercise-output" id="ex2out">Output will appear here.</div>
+      <div class="exercise-hint-content" id="ex2hint">Try calling <code>makeCounter(10, -2)</code> to count down from 10 by twos — each call still closes over its own <code>count</code>.</div>
+    </div>
+
+    <div class="takeaway-box">
+      <h4>✅ Key takeaways</h4>
+      <ol>
+        <li>A closure = a function + a live reference to the scope it was defined in.</li>
+        <li>Every function forms a closure; it's only visible once it outlives its creator.</li>
+        <li>Closures hold references, not copies — changes to the outer variable are visible.</li>
+        <li>Each invocation of the outer function creates an independent closure.</li>
+      </ol>
+    </div>
+
+    <div class="quiz-section" id="quiz-2"></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 3 ================= -->
+<section class="module" id="module-3" data-module="3">
+  <div class="wrap">
+    <div class="module-head">
+      <div class="module-badge">MODULE 3 · PRACTICAL APPLICATION</div>
+      <h2 class="module-title">Using closures on purpose</h2>
+      <p class="module-lead">Closures aren't a party trick — they're the mechanism behind private state, factory functions, memoization, and the loop bug that trips up nearly every JS developer at least once.</p>
+    </div>
+
+    <h3 class="sec-title">Pattern 1: private state <span class="tag">application</span></h3>
+    <p class="body-text">Before <code>#privateFields</code> existed in classes, closures were the only way to get true privacy in JavaScript — a variable that literally cannot be reached from outside, only through functions you explicitly expose.</p>
+    <div class="code-block">
+      <div class="code-head"><span>bank-account.js</span></div>
+      <pre><span class="c-kw">function</span> <span class="c-fn">createAccount</span>(initialBalance) {
+  <span class="c-kw">let</span> balance = initialBalance; <span class="c-cm">// unreachable from outside</span>
+
+  <span class="c-kw">return</span> {
+    deposit(amount) { balance += amount; <span class="c-kw">return</span> balance; },
+    withdraw(amount) {
+      <span class="c-kw">if</span> (amount > balance) <span class="c-kw">throw</span> <span class="c-kw">new</span> <span class="c-fn">Error</span>(<span class="c-str">"Insufficient funds"</span>);
+      balance -= amount; <span class="c-kw">return</span> balance;
+    },
+    getBalance() { <span class="c-kw">return</span> balance; }
+  };
+}
+
+<span class="c-kw">const</span> acc = <span class="c-fn">createAccount</span>(<span class="c-num">100</span>);
+acc.deposit(<span class="c-num">50</span>);      <span class="c-cm">// 150</span>
+acc.balance;               <span class="c-cm">// undefined — truly private</span></pre>
+    </div>
+
+    <h3 class="sec-title">Pattern 2: function factories <span class="tag">application</span></h3>
+    <div class="code-block">
+      <div class="code-head"><span>function-factory.js</span></div>
+      <pre><span class="c-kw">function</span> <span class="c-fn">multiplyBy</span>(factor) {
+  <span class="c-kw">return</span> (n) => n * factor; <span class="c-cm">// closes over "factor"</span>
+}
+
+<span class="c-kw">const</span> double = <span class="c-fn">multiplyBy</span>(<span class="c-num">2</span>);
+<span class="c-kw">const</span> triple = <span class="c-fn">multiplyBy</span>(<span class="c-num">3</span>);
+double(<span class="c-num">5</span>);  <span class="c-cm">// 10</span>
+triple(<span class="c-num">5</span>);  <span class="c-cm">// 15 — independent closures, same factory</span></pre>
+    </div>
+
+    <h3 class="sec-title">Pattern 3: memoization <span class="tag">application</span></h3>
+    <div class="code-block">
+      <div class="code-head"><span>memoize.js</span></div>
+      <pre><span class="c-kw">function</span> <span class="c-fn">memoize</span>(fn) {
+  <span class="c-kw">const</span> cache = <span class="c-kw">new</span> <span class="c-fn">Map</span>(); <span class="c-cm">// captured, private cache</span>
+  <span class="c-kw">return</span> <span class="c-kw">function</span>(arg) {
+    <span class="c-kw">if</span> (cache.has(arg)) <span class="c-kw">return</span> cache.get(arg);
+    <span class="c-kw">const</span> result = fn(arg);
+    cache.set(arg, result);
+    <span class="c-kw">return</span> result;
+  };
+}</pre>
+    </div>
+
+    <h3 class="sec-title">The classic loop bug <span class="tag">debugging</span></h3>
+    <p class="body-text">This is the single most common closures interview question, because it directly tests whether you understand <code>var</code> vs <code>let</code> from Module 1 combined with closures from Module 2.</p>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4 style="color:#ef8171">Buggy — var</h4>
+        <ul style="font-family:var(--mono); font-size:12.3px;">
+          <li>for (var i=0;i&lt;3;i++)</li>
+          <li>&nbsp;&nbsp;setTimeout(()=&gt;console.log(i))</li>
+          <li style="color:#ef8171">// logs 3, 3, 3</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4 style="color:#7ee3c9">Fixed — let</h4>
+        <ul style="font-family:var(--mono); font-size:12.3px;">
+          <li>for (let i=0;i&lt;3;i++)</li>
+          <li>&nbsp;&nbsp;setTimeout(()=&gt;console.log(i))</li>
+          <li style="color:#7ee3c9">// logs 0, 1, 2</li>
+        </ul>
+      </div>
+    </div>
+    <p class="body-text">With <code>var</code>, there is only <strong>one</strong> <code>i</code> for the entire loop — every callback closes over that same shared box, and by the time the callbacks run, the loop has already finished and <code>i</code> is 3. With <code>let</code>, the engine creates a <strong>fresh binding of <code>i</code> for every iteration</strong>, so each callback closes over its own snapshot.</p>
+
+    <div class="analogy-box">
+      <div class="ic">📮</div>
+      <div>
+        <h4>The mailbox analogy</h4>
+        <p><code>var i</code> is one shared mailbox that every callback has the address to — by the time anyone checks it, it holds whatever was last put in. <code>let i</code> gives every loop iteration its <em>own</em> mailbox with its own address, so each callback reads the value that was there when it was made.</p>
+      </div>
+    </div>
+
+    <h3 class="sec-title">Exercise: fix the loop <span class="tag">practice</span></h3>
+    <div class="exercise">
+      <div class="exercise-head"><span class="ic">🧪</span><h4>Make this log 0, 1, 2 instead of 3, 3, 3 — without changing setTimeout</h4></div>
+      <textarea id="ex3code">let output = [];
+for (var i = 0; i < 3; i++) {
+  (function(i){
+    output.push(i);
+  })(i);
+}
+console.log(output.join(", "));
+// try removing the (function(i){...})(i) IIFE wrapper and see what changes</textarea>
+      <div class="exercise-controls">
+        <button class="btn btn-sm" onclick="runExercise('ex3code','ex3out')">▶ Run</button>
+        <button class="btn-ghost btn-sm" onclick="resetExercise('ex3code', ex3default)">Reset</button>
+        <span class="exercise-hint" onclick="toggleHint('ex3hint')">Need a hint?</span>
+      </div>
+      <div class="exercise-output" id="ex3out">Output will appear here.</div>
+      <div class="exercise-hint-content" id="ex3hint">An Immediately Invoked Function Expression (IIFE) creates a new function scope per iteration, giving each call its own private copy of <code>i</code> — the same effect <code>let</code> gives you automatically.</div>
+    </div>
+
+    <div class="misconception-box">
+      <h4>⚠ Common misconceptions</h4>
+      <div class="item"><strong>"The loop bug is a bug in JavaScript."</strong> Not exactly — it's <code>var</code> behaving exactly as function-scoped, working as designed. <code>let</code> was added partly to make the intuitive behavior the default.</div>
+      <div class="item"><strong>"Closures cause memory leaks by default."</strong> Overstated — closures keep referenced variables alive only as long as the closure itself is reachable. It's a leak only if you keep closures around longer than you need them.</div>
+    </div>
+
+    <div class="takeaway-box">
+      <h4>✅ Key takeaways</h4>
+      <ol>
+        <li>Closures enable true private state without classes.</li>
+        <li>Factory functions return closures customized by their arguments.</li>
+        <li>Memoization uses a closed-over cache to skip repeat work.</li>
+        <li>The <code>var</code>-loop bug happens because one shared binding is captured by every callback; <code>let</code> or an IIFE gives each iteration its own binding.</li>
+      </ol>
+    </div>
+
+    <div class="quiz-section" id="quiz-3"></div>
+  </div>
+</section>
+
+<!-- ================= MODULE 4 ================= -->
+<section class="module" id="module-4" data-module="4">
+  <div class="wrap">
+    <div class="module-head">
+      <div class="module-badge">MODULE 4 · MASTERY</div>
+      <h2 class="module-title">Scope, closures, and the engine underneath</h2>
+      <p class="module-lead">The final layer: how the module pattern uses closures at scale, what actually gets kept alive in memory, and how to reason about closures the way a senior engineer does in a code review.</p>
+    </div>
+
+    <h3 class="sec-title">The module pattern <span class="tag">architecture</span></h3>
+    <p class="body-text">Before ES modules existed, teams simulated modules with a single closure: an IIFE that returns an object of public methods while keeping helpers and state private inside its scope. Native <code>import</code>/<code>export</code> now does this at the file level, but the underlying idea — one closure, a curated public surface — is identical.</p>
+    <div class="code-block">
+      <div class="code-head"><span>module-pattern.js</span></div>
+      <pre><span class="c-kw">const</span> CartModule = (<span class="c-kw">function</span>() {
+  <span class="c-kw">let</span> items = []; <span class="c-cm">// private to the whole module</span>
+
+  <span class="c-kw">function</span> <span class="c-fn">total</span>() {
+    <span class="c-kw">return</span> items.reduce((sum, i) => sum + i.price, <span class="c-num">0</span>);
+  }
+
+  <span class="c-kw">return</span> {
+    add(item) { items.push(item); },
+    getTotal: total,
+    count: () => items.length
+  };
+})();
+
+CartModule.add({ price: <span class="c-num">20</span> });
+CartModule.getTotal(); <span class="c-cm">// 20 — items is never exposed directly</span></pre>
+    </div>
+
+    <h3 class="sec-title">What actually stays in memory <span class="tag">under the hood</span></h3>
+    <p class="body-text">Modern engines don't naively keep an entire outer scope alive just because one inner function exists — most engines (V8 included) perform closure optimization: they keep alive only the specific variables the inner function actually references, not the whole environment. Understanding this matters for two practical reasons: predicting memory behavior, and knowing that "closures are expensive" is mostly a myth for normal usage patterns.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4 style="color:#ef8171">Naively kept alive (misconception)</h4>
+        <ul>
+          <li>Entire outer function's variable set</li>
+          <li>Every argument passed to the outer function</li>
+          <li>Any large object created but unused by the inner fn</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h4 style="color:#7ee3c9">Actually kept alive (reality)</h4>
+        <ul>
+          <li>Only the specific variables the inner function references</li>
+          <li>Released once no closure references them anymore</li>
+          <li>Sibling closures over the same scope can share one environment</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 720 200" style="width:100%; height:auto;">
+        <rect x="30" y="30" width="660" height="140" rx="12" fill="rgba(227,179,65,0.05)" stroke="#3a4048"/>
+        <text x="50" y="54" fill="#8b96a3" font-family="JetBrains Mono, monospace" font-size="11">function build() { let a=1, b=2, big=hugeArray; return ()=&gt;a+b; }</text>
+        <g class="firefly"><circle cx="120" cy="115" r="16" fill="#e3b341"/><text x="120" y="119" text-anchor="middle" font-size="10" fill="#0d1117" font-family="JetBrains Mono">a</text></g>
+        <g class="firefly" style="animation-delay:.3s"><circle cx="180" cy="115" r="16" fill="#e3b341"/><text x="180" y="119" text-anchor="middle" font-size="10" fill="#0d1117" font-family="JetBrains Mono">b</text></g>
+        <circle cx="260" cy="115" r="16" fill="#3a4048" opacity="0.5"/><text x="260" y="119" text-anchor="middle" font-size="10" fill="#8b96a3" font-family="JetBrains Mono">big</text>
+        <text x="300" y="120" fill="#5f6b78" font-family="JetBrains Mono, monospace" font-size="11">← "big" is garbage collected: the returned fn never touches it</text>
+      </svg>
+      <div class="diagram-caption">Only referenced fireflies (a, b) survive. Unreferenced <code>big</code> gets collected even though it's in the same lexical scope.</div>
+    </div>
+
+    <h3 class="sec-title">Reading closures like a senior engineer <span class="tag">mastery mindset</span></h3>
+    <p class="body-text">When reviewing unfamiliar code, ask three questions in order: <strong>(1)</strong> Does this inner function reference any variable it doesn't declare itself? <strong>(2)</strong> Does the inner function get returned, stored, or passed elsewhere, so it outlives its creator? <strong>(3)</strong> If both are true, what is the captured variable's lifecycle — is it meant to be shared across calls (state) or fresh per call (an argument)? Ninety percent of closure bugs come from question 3 being answered wrong.</p>
+
+    <h3 class="sec-title">Exercise: spot and fix the shared-state bug <span class="tag">practice</span></h3>
+    <div class="exercise">
+      <div class="exercise-head"><span class="ic">🧪</span><h4>Three buttons should each report their own click count. Fix the code so they do.</h4></div>
+      <textarea id="ex4code">function attachHandlers(buttonNames) {
+  let clicks = 0; // BUG: shared across every button
+  return buttonNames.map(name => {
+    return function () {
+      clicks++;
+      return name + ": " + clicks;
+    };
+  });
+}
+
+const [a, b] = attachHandlers(["Save", "Cancel"]);
+console.log(a()); // Save: 1
+console.log(a()); // Save: 2
+console.log(b()); // should be "Cancel: 1" — is it?</textarea>
+      <div class="exercise-controls">
+        <button class="btn btn-sm" onclick="runExercise('ex4code','ex4out')">▶ Run</button>
+        <button class="btn-ghost btn-sm" onclick="resetExercise('ex4code', ex4default)">Reset</button>
+        <span class="exercise-hint" onclick="toggleHint('ex4hint')">Need a hint?</span>
+      </div>
+      <div class="exercise-output" id="ex4out">Output will appear here.</div>
+      <div class="exercise-hint-content" id="ex4hint">Move <code>let clicks = 0</code> inside the <code>.map()</code> callback so each button gets its own binding — exactly the same fix pattern as the var-loop bug in Module 3.</div>
+    </div>
+
+    <div class="takeaway-box">
+      <h4>✅ Key takeaways</h4>
+      <ol>
+        <li>The module pattern is one closure exposing a curated public API.</li>
+        <li>Engines only retain the specific variables a closure actually references.</li>
+        <li>"Closures are slow/leaky" is mostly a myth for typical usage.</li>
+        <li>Diagnose closure bugs by asking what's captured and whether it should be shared or per-call.</li>
+      </ol>
+    </div>
+
+    <div class="quiz-section" id="quiz-4"></div>
+  </div>
+</section>
+
+<!-- ================= FINAL CHALLENGE + RESOURCES ================= -->
+<section class="final-section" id="final" style="display:none;">
+  <div class="wrap">
+    <div class="module-badge">FINAL CHALLENGE</div>
+    <h2 class="module-title" style="margin-top:16px;">Build a rate limiter</h2>
+    <p class="module-lead" style="margin-bottom:24px;">Combine everything: private state, a factory, and per-call correctness. Write a <code>createRateLimiter(maxCalls)</code> function returning a function that allows only <code>maxCalls</code> calls, then rejects further ones with <code>"blocked"</code>.</p>
+
+    <div class="exercise">
+      <div class="exercise-head"><span class="ic">🏆</span><h4>createRateLimiter(maxCalls)</h4></div>
+      <textarea id="ex5code">function createRateLimiter(maxCalls) {
+  let calls = 0;
+  return function () {
+    calls++;
+    if (calls > maxCalls) return "blocked";
+    return "allowed (" + calls + "/" + maxCalls + ")";
+  };
+}
+
+const limiter = createRateLimiter(2);
+console.log(limiter());
+console.log(limiter());
+console.log(limiter());</textarea>
+      <div class="exercise-controls">
+        <button class="btn btn-sm" onclick="runExercise('ex5code','ex5out')">▶ Run</button>
+        <button class="btn-ghost btn-sm" onclick="resetExercise('ex5code', ex5default)">Reset</button>
+        <button class="btn-sm" style="background:var(--mint); border:none; color:#0d1117; font-family:var(--display); font-weight:600; border-radius:8px; cursor:pointer;" onclick="completeChallenge()">Mark challenge complete</button>
+      </div>
+      <div class="exercise-output" id="ex5out">Output will appear here.</div>
+    </div>
+
+    <h3 class="sec-title">Cheat sheet <span class="tag">reference</span></h3>
+    <div class="cheat-grid">
+      <div class="cheat-card">
+        <h4>SCOPE RULES</h4>
+        <pre>var    → function-scoped, hoisted
+let    → block-scoped, TDZ
+const  → block-scoped, no reassign
+Lookup → inner to outer, never reverse
+Global → outermost link, not special</pre>
+      </div>
+      <div class="cheat-card">
+        <h4>CLOSURE RULES</h4>
+        <pre>Closure = fn + reference to its
+          birth scope
+Formed  → every function, always
+Visible → when inner outlives outer
+Holds   → live reference, not a copy
+Each outer call → new independent
+          closure</pre>
+      </div>
+      <div class="cheat-card">
+        <h4>COMMON PATTERNS</h4>
+        <pre>Private state → return an object of
+                methods over local vars
+Factory       → return fn customized
+                by outer args
+Memoize       → cache Map closed over
+Module        → IIFE returning a
+                public API</pre>
+      </div>
+      <div class="cheat-card">
+        <h4>THE LOOP BUG</h4>
+        <pre>for (var i...)   → 1 shared binding
+for (let i...)   → 1 binding/iteration
+Fix with var     → wrap in an IIFE
+                   and pass i in</pre>
+      </div>
+    </div>
+
+    <h3 class="sec-title">Summary notes <span class="tag">printable</span></h3>
+    <p class="body-text">Scope determines <em>where a name can be seen</em>; closures determine <em>whether that name keeps existing</em> after its creator returns. Every JS function is a closure over its lexical scope, but the concept only becomes visible — and useful — when an inner function is returned, stored, or handed off, letting it carry captured variables anywhere it goes. Master this and private state, factories, memoization, and the infamous loop bug all become special cases of one idea rather than four things to memorize separately.</p>
+
+    <h3 class="sec-title">Continue learning <span class="tag">next steps</span></h3>
+    <div class="resource-grid">
+      <div class="resource-card">
+        <h5>Books</h5>
+        <ul>
+          <li>"You Don't Know JS: Scope &amp; Closures" — Kyle Simpson</li>
+          <li>"Eloquent JavaScript" — Marijn Haverbeke, ch. 3</li>
+          <li>"JavaScript: The Definitive Guide" — David Flanagan</li>
+        </ul>
+      </div>
+      <div class="resource-card">
+        <h5>Documentation</h5>
+        <ul>
+          <li>MDN: Closures</li>
+          <li>MDN: Grammar and types — scope</li>
+          <li>ECMA-262 — Lexical Environments spec</li>
+        </ul>
+      </div>
+      <div class="resource-card">
+        <h5>Research &amp; deep dives</h5>
+        <ul>
+          <li>V8 blog: "Optimizing JS variable access"</li>
+          <li>"An Overview of ECMAScript 2015 Scoping"</li>
+          <li>V8 blog: closure &amp; garbage collection internals</li>
+        </ul>
+      </div>
+      <div class="resource-card">
+        <h5>Communities</h5>
+        <ul>
+          <li>r/javascript</li>
+          <li>Stack Overflow — [javascript] + [closures] tags</li>
+          <li>TC39 discourse (for language-spec questions)</li>
+        </ul>
+      </div>
+      <div class="resource-card">
+        <h5>Practice platforms</h5>
+        <ul>
+          <li>JavaScript30 (build 30 closure-heavy mini apps)</li>
+          <li>Codewars — closures/scope kata</li>
+          <li>Frontend Mentor — JS challenges</li>
+        </ul>
+      </div>
+      <div class="resource-card">
+        <h5>Search keywords</h5>
+        <div>
+          <span class="keyword-chip">lexical scope</span>
+          <span class="keyword-chip">closure memory model</span>
+          <span class="keyword-chip">var vs let TDZ</span>
+          <span class="keyword-chip">module pattern JS</span>
+          <span class="keyword-chip">memoization closures</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sec-title">Prompts for further AI-assisted learning <span class="tag">go deeper</span></h3>
+    <div class="info-card" style="margin-bottom:30px;">
+      <ul>
+        <li>"Walk through the scope chain for this exact snippet of my code, line by line."</li>
+        <li>"Give me 5 closure interview questions of increasing difficulty, then quiz me one at a time."</li>
+        <li>"Explain how closures interact with async/await and the event loop."</li>
+        <li>"Show me how React's useState relies on closures under the hood."</li>
+        <li>"Give me a buggy closure-related code sample and let me debug it before you explain."</li>
+      </ul>
+    </div>
+
+    <div style="text-align:center; padding:30px 0;">
+      <div id="finalJar" style="font-size:28px; letter-spacing:6px; margin-bottom:16px;"></div>
+      <h3 style="font-family:var(--display); font-size:20px; margin-bottom:8px;">Studio complete 🎉</h3>
+      <p style="color:var(--muted); font-size:14px;">You've caught every firefly. Print these notes or revisit any module anytime — your progress is saved in this browser.</p>
+    </div>
+  </div>
+</section>
+
+<div class="footer">Interactive Learning Studio · JavaScript Closures &amp; Scope · Built for one-sitting mastery</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Content data ============ */
+var ex1default, ex2default, ex3default, ex4default, ex5default;
+document.addEventListener('DOMContentLoaded', function(){
+  ex1default = document.getElementById('ex1code').value;
+  ex2default = document.getElementById('ex2code').value;
+  ex3default = document.getElementById('ex3code').value;
+  ex4default = document.getElementById('ex4code').value;
+  ex5default = document.getElementById('ex5code').value;
+});
+
+var quizData = {
+  1: {
+    title: "Module 1 Check — Scope Foundations",
+    questions: [
+      {
+        q: "What determines a variable's scope in JavaScript?",
+        options: [
+          "Where in the code the variable was written (lexical position)",
+          "Which function happens to call the code at runtime",
+          "The order functions are declared in the file",
+          "Whether the variable name starts with a capital letter"
+        ],
+        correct: 0,
+        explain: "Scope is lexical — fixed by where you typed the declaration, never by which function calls it later. This is the foundation closures rely on."
+      },
+      {
+        q: "A variable declared with var inside an if-block is:",
+        options: [
+          "Trapped inside that block only",
+          "Visible throughout the entire enclosing function",
+          "Automatically converted to let",
+          "Only visible in the global scope"
+        ],
+        correct: 1,
+        explain: "var ignores block boundaries like if and for — it's scoped to the nearest enclosing function (or global scope if there is none)."
+      },
+      {
+        q: "When the engine can't find a variable in the current scope, what does it do?",
+        options: [
+          "Immediately throws a SyntaxError",
+          "Assumes the value is undefined and moves on silently",
+          "Walks outward through the scope chain to the next enclosing scope",
+          "Searches every function in the file alphabetically"
+        ],
+        correct: 2,
+        explain: "Lookups walk outward one link at a time along the scope chain until the variable is found, or a ReferenceError is thrown if the chain is exhausted."
+      },
+      {
+        q: "Which statement about let and const is accurate?",
+        options: [
+          "They're function-scoped, exactly like var",
+          "They're block-scoped and respect every pair of curly braces",
+          "They can be used before their declaration with no restriction",
+          "They can be redeclared freely in the same scope"
+        ],
+        correct: 1,
+        explain: "let and const are block-scoped — any { } creates a new boundary for them, unlike var which only respects function boundaries."
+      }
+    ]
+  },
+  2: {
+    title: "Module 2 Check — What Is a Closure",
+    questions: [
+      {
+        q: "Which best defines a closure?",
+        options: [
+          "A function that has no parameters",
+          "A function bundled with a live reference to the scope it was created in",
+          "Any function that returns another function",
+          "A block of code wrapped in curly braces"
+        ],
+        correct: 1,
+        explain: "A closure is a function plus a live link to its birth scope. It doesn't require returning a function — that's just the most common way it becomes visible."
+      },
+      {
+        q: "In the makeCounter() example, why do counterA and counterB have independent counts?",
+        options: [
+          "Because count is declared with const instead of let",
+          "Because JavaScript automatically clones variables for each function",
+          "Because each call to makeCounter() creates a brand-new lexical environment",
+          "They don't — they actually share the same count"
+        ],
+        correct: 2,
+        explain: "Every call to makeCounter() creates a fresh environment with its own count, so the two returned closures never interfere with each other."
+      },
+      {
+        q: "If an outer variable changes after a closure is created, what does the closure see?",
+        options: [
+          "The original value at the moment the closure was created",
+          "The current, updated value — because it holds a live reference",
+          "undefined, because the link is broken",
+          "It depends on whether the variable is a primitive or object"
+        ],
+        correct: 1,
+        explain: "Closures capture references, not snapshots. Any later mutation to the outer variable is visible through the closure."
+      },
+      {
+        q: "Does every JavaScript function technically form a closure?",
+        options: [
+          "No, only functions that are returned from another function",
+          "No, only arrow functions",
+          "Yes, but it's only observable once the inner function outlives its creator",
+          "Yes, but only in strict mode"
+        ],
+        correct: 2,
+        explain: "Every function closes over its lexical scope by default. It just goes unnoticed when the outer scope disappears immediately, e.g. a normal function call and return."
+      }
+    ]
+  },
+  3: {
+    title: "Module 3 Check — Applying Closures",
+    questions: [
+      {
+        q: "How did closures provide 'private' variables before class #fields existed?",
+        options: [
+          "By using the private keyword",
+          "By declaring variables with const only",
+          "By keeping variables inside a function's scope and exposing only chosen access methods",
+          "Private variables were never possible before ES2022"
+        ],
+        correct: 2,
+        explain: "A returned object's methods can close over local variables that are never exposed directly — that's the classic closure-based privacy pattern."
+      },
+      {
+        q: "In for (var i = 0; i < 3; i++) { setTimeout(() => console.log(i)); }, what gets logged?",
+        options: [
+          "0, 1, 2",
+          "3, 3, 3",
+          "undefined, undefined, undefined",
+          "0, 0, 0"
+        ],
+        correct: 1,
+        explain: "var creates a single shared binding for the whole loop. By the time the callbacks run, the loop has finished and i is 3 for every one of them."
+      },
+      {
+        q: "Why does switching var to let fix the loop-callback bug?",
+        options: [
+          "let makes the loop run faster",
+          "let creates a fresh binding of the variable for each iteration",
+          "let automatically converts callbacks to synchronous code",
+          "It doesn't actually fix anything"
+        ],
+        correct: 1,
+        explain: "let gives every iteration its own independent binding, so each callback's closure captures a different value of i."
+      },
+      {
+        q: "What does a memoize(fn) wrapper rely on closures for?",
+        options: [
+          "To make the function run in parallel",
+          "To keep a private cache alive between calls to the returned function",
+          "To automatically parallelize recursive calls",
+          "To convert the function's arguments to strings"
+        ],
+        correct: 1,
+        explain: "The cache (often a Map) is declared inside memoize and captured by the returned function, persisting between calls without being exposed globally."
+      }
+    ]
+  },
+  4: {
+    title: "Module 4 Check — Mastery",
+    questions: [
+      {
+        q: "What is the module pattern, structurally?",
+        options: [
+          "A class with only static methods",
+          "An IIFE (or function scope) whose closure exposes a curated public API while keeping helpers private",
+          "A JSON file listing all functions",
+          "A special ES2020 keyword"
+        ],
+        correct: 1,
+        explain: "The module pattern is exactly one closure: private state and helpers stay trapped inside, and only the returned object's methods are reachable from outside."
+      },
+      {
+        q: "Do modern JS engines keep an entire outer function's scope alive just because one closure exists?",
+        options: [
+          "Yes, always, with no exceptions",
+          "No — most engines only retain the specific variables the inner function actually references",
+          "Only if the outer function has more than 5 variables",
+          "Only in Node.js, not in browsers"
+        ],
+        correct: 1,
+        explain: "Engines like V8 typically optimize closures to retain only referenced variables, releasing unreferenced ones even though they're in the same lexical scope."
+      },
+      {
+        q: "A colleague says 'closures always cause memory leaks.' What's the accurate response?",
+        options: [
+          "They're completely correct — avoid closures entirely",
+          "Closures only leak if they're kept reachable longer than needed; typical usage is fine",
+          "Only closures inside loops leak memory",
+          "Closures cannot leak memory under any circumstances"
+        ],
+        correct: 1,
+        explain: "A closure keeps referenced variables alive only as long as the closure itself is reachable. It's a leak only when a closure outlives its actual usefulness."
+      },
+      {
+        q: "In the buggy 'shared clicks' example, what's the correct fix?",
+        options: [
+          "Change let clicks to const clicks",
+          "Move the clicks declaration inside the per-button callback so each gets its own binding",
+          "Remove the .map() call entirely",
+          "Add async/await to the inner function"
+        ],
+        correct: 1,
+        explain: "Declaring clicks inside the callback passed to .map() gives every returned function its own private counter, mirroring the var-loop fix from Module 3."
+      }
+    ]
+  }
+};
+
+var progress = JSON.parse(localStorage.getItem('closuresStudioProgress') || '{}');
+if(!progress.quizzes) progress.quizzes = {};
+if(!progress.unlocked) progress.unlocked = [1];
+if(!progress.challengeDone) progress.challengeDone = false;
+
+function saveProgress(){ localStorage.setItem('closuresStudioProgress', JSON.stringify(progress)); }
+
+/* ============ Roadmap ============ */
+var roadInfo = [
+  {n:1, t:"Foundation", d:"Scope chain, var vs let/const"},
+  {n:2, t:"Core Mechanism", d:"What a closure really is"},
+  {n:3, t:"Application", d:"Private state, factories, the loop bug"},
+  {n:4, t:"Mastery", d:"Module pattern & engine internals"}
+];
+function renderRoadmap(){
+  var el = document.getElementById('roadmap');
+  el.innerHTML = roadInfo.map(function(r){
+    var isUnlocked = progress.unlocked.indexOf(r.n) > -1;
+    var isDone = progress.quizzes[r.n] !== undefined;
+    var cls = 'road-card' + (isUnlocked? '':' locked') + (isDone? ' done':'');
+    var status = isDone ? '✅' : (isUnlocked ? '' : '🔒');
+    return '<div class="'+cls+'" onclick="'+(isUnlocked? 'goToModule('+r.n+')':'')+'">'+
+      '<div class="road-status">'+status+'</div>'+
+      '<div class="road-num">MODULE 0'+r.n+'</div>'+
+      '<div class="road-title">'+r.t+'</div>'+
+      '<div class="road-desc">'+r.d+'</div></div>';
+  }).join('');
+}
+renderRoadmap();
+
+function goToModule(n){
+  if(progress.unlocked.indexOf(n) === -1) return;
+  document.querySelectorAll('.module').forEach(function(m){ m.classList.remove('active'); });
+  var target = document.getElementById('module-'+n);
+  if(target){ target.classList.add('active'); target.scrollIntoView({behavior:'smooth'}); }
+  if(!document.getElementById('quiz-'+n).dataset.built){ buildQuiz(n); }
+}
+
+/* ============ Quiz engine ============ */
+function buildQuiz(n){
+  var data = quizData[n];
+  var container = document.getElementById('quiz-'+n);
+  container.dataset.built = "1";
+  var html = '<div class="quiz-head"><h3>📝 '+data.title+'</h3><div class="quiz-progress-dots" id="dots-'+n+'"></div></div>';
+  data.questions.forEach(function(q, qi){
+    html += '<div class="question-block" id="q-'+n+'-'+qi+'" data-q="'+qi+'">';
+    html += '<div class="q-text">Question '+(qi+1)+' of '+data.questions.length+': '+q.q+'</div>';
+    html += '<div class="q-options">';
+    q.options.forEach(function(opt, oi){
+      var letter = String.fromCharCode(65+oi);
+      html += '<div class="q-option" data-oi="'+oi+'" onclick="selectAnswer('+n+','+qi+','+oi+')"><span class="letter">'+letter+'</span><span>'+opt+'</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="q-explain" id="explain-'+n+'-'+qi+'"></div>';
+    html += '<div class="q-nav"><button class="btn btn-sm" id="next-'+n+'-'+qi+'" style="display:none" onclick="nextQuestion('+n+','+qi+')">'+(qi === data.questions.length-1 ? 'See results →':'Next question →')+'</button></div>';
+    html += '</div>';
+  });
+  html += '<div class="quiz-results" id="results-'+n+'">'+
+    '<div class="score-ring-wrap"><svg width="140" height="140"><circle cx="70" cy="70" r="60" fill="none" stroke="#1c2530" stroke-width="10"/><circle id="ring-'+n+'" cx="70" cy="70" r="60" fill="none" stroke="#7ee3c9" stroke-width="10" stroke-linecap="round" transform="rotate(-90 70 70)" stroke-dasharray="377" stroke-dashoffset="377" style="transition:stroke-dashoffset 1s ease"/></svg><div class="score-num" id="scoretext-'+n+'"><span>SCORE</span></div></div>'+
+    '<h3 id="resulttitle-'+n+'"></h3><p id="resultsub-'+n+'"></p>'+
+    '<button class="btn" onclick="proceedAfterQuiz('+n+')">'+(n<4? 'Unlock Module '+(n+1)+' →':'Go to Final Challenge →')+'</button>'+
+    '<button class="btn-ghost" style="margin-left:10px" onclick="retryQuiz('+n+')">Retry quiz</button>'+
+    '</div>';
+  container.innerHTML = html;
+  document.getElementById('q-'+n+'-0').classList.add('active');
+  updateDots(n, 0, {});
+}
+
+var quizState = {};
+function updateDots(n, current, answers){
+  var dots = document.getElementById('dots-'+n);
+  var total = quizData[n].questions.length;
+  var out = '';
+  for(var i=0;i<total;i++){
+    var cls = 'qdot' + (answers[i]!==undefined? ' answered':'') + (i===current? ' current':'');
+    out += '<div class="'+cls+'"></div>';
+  }
+  dots.innerHTML = out;
+}
+
+function selectAnswer(n, qi, oi){
+  quizState[n] = quizState[n] || {};
+  if(quizState[n][qi] !== undefined) return; // already answered
+  var data = quizData[n].questions[qi];
+  quizState[n][qi] = oi;
+  var block = document.getElementById('q-'+n+'-'+qi);
+  var opts = block.querySelectorAll('.q-option');
+  opts.forEach(function(o){
+    o.classList.add('disabled');
+    var thisOi = parseInt(o.dataset.oi);
+    if(thisOi === data.correct) o.classList.add('correct');
+    else if(thisOi === oi) o.classList.add('incorrect');
+  });
+  var explainEl = document.getElementById('explain-'+n+'-'+qi);
+  var isCorrect = oi === data.correct;
+  explainEl.innerHTML = (isCorrect? '✅ Correct. ':'❌ Not quite. ') + data.explain;
+  explainEl.classList.add('show');
+  document.getElementById('next-'+n+'-'+qi).style.display = 'inline-flex';
+  updateDots(n, qi, quizState[n]);
+}
+
+function nextQuestion(n, qi){
+  var total = quizData[n].questions.length;
+  document.getElementById('q-'+n+'-'+qi).classList.remove('active');
+  if(qi+1 < total){
+    document.getElementById('q-'+n+'-'+(qi+1)).classList.add('active');
+    updateDots(n, qi+1, quizState[n]);
+  } else {
+    showResults(n);
+  }
+}
+
+function showResults(n){
+  var data = quizData[n];
+  var answers = quizState[n];
+  var correctCount = 0;
+  data.questions.forEach(function(q, qi){ if(answers[qi] === q.correct) correctCount++; });
+  var pct = Math.round(correctCount / data.questions.length * 100);
+  document.getElementById('results-'+n).classList.add('show');
+  var circumference = 377;
+  var offset = circumference - (circumference * pct/100);
+  document.getElementById('ring-'+n).style.strokeDashoffset = offset;
+  document.getElementById('scoretext-'+n).innerHTML = pct+'%<span>SCORE</span>';
+  var title, sub;
+  if(pct === 100){ title = '🌟 Golden firefly caught!'; sub = 'Perfect score — you fully understand this module.'; }
+  else if(pct >= 75){ title = '🔥 Great work'; sub = correctCount+' of '+data.questions.length+' correct — solid grasp of this module.'; }
+  else if(pct >= 50){ title = '👍 Getting there'; sub = correctCount+' of '+data.questions.length+' correct — consider re-reading the misconceptions above.'; }
+  else { title = '📘 Worth a review'; sub = correctCount+' of '+data.questions.length+' correct — revisit the module before continuing.'; }
+  document.getElementById('resulttitle-'+n).textContent = title;
+  document.getElementById('resultsub-'+n).textContent = sub;
+  progress.quizzes[n] = {score: pct, correct: correctCount, total: data.questions.length};
+  saveProgress();
+  renderRoadmap();
+  updateJar();
+  updateTopProgress();
+  showToast('Module '+n+' quiz complete — '+pct+'%');
+}
+
+function retryQuiz(n){
+  quizState[n] = {};
+  var data = quizData[n];
+  document.getElementById('results-'+n).classList.remove('show');
+  data.questions.forEach(function(q, qi){
+    var block = document.getElementById('q-'+n+'-'+qi);
+    block.classList.remove('active');
+    var opts = block.querySelectorAll('.q-option');
+    opts.forEach(function(o){ o.classList.remove('correct','incorrect','disabled'); });
+    document.getElementById('explain-'+n+'-'+qi).classList.remove('show');
+    document.getElementById('next-'+n+'-'+qi).style.display = 'none';
+  });
+  document.getElementById('q-'+n+'-0').classList.add('active');
+  updateDots(n, 0, {});
+}
+
+function proceedAfterQuiz(n){
+  if(n < 4){
+    if(progress.unlocked.indexOf(n+1) === -1){ progress.unlocked.push(n+1); saveProgress(); }
+    renderRoadmap();
+    goToModule(n+1);
+  } else {
+    document.getElementById('final').style.display = 'block';
+    document.getElementById('final').scrollIntoView({behavior:'smooth'});
+  }
+}
+
+/* ============ Jar / progress ============ */
+function updateJar(){
+  var jars = '';
+  for(var i=1;i<=4;i++){
+    if(progress.quizzes[i] && progress.quizzes[i].score === 100) jars += '🟡';
+    else if(progress.quizzes[i]) jars += '🟢';
+    else jars += '⚪';
+  }
+  if(progress.challengeDone) jars += ' 🏆';
+  document.getElementById('jarDisplay').textContent = jars;
+  var finalJarEl = document.getElementById('finalJar');
+  if(finalJarEl) finalJarEl.textContent = jars;
+}
+function updateTopProgress(){
+  var completedQuizzes = Object.keys(progress.quizzes).length;
+  var totalSteps = 5; // 4 quizzes + final challenge
+  var done = completedQuizzes + (progress.challengeDone? 1:0);
+  var pct = Math.round(done/totalSteps*100);
+  document.getElementById('topProgressFill').style.width = pct+'%';
+  document.getElementById('topProgressLabel').textContent = pct+'% complete';
+}
+
+function completeChallenge(){
+  progress.challengeDone = true;
+  saveProgress();
+  updateJar();
+  updateTopProgress();
+  showToast('🏆 Final challenge complete! Studio finished.');
+}
+
+function resetProgress(){
+  if(!confirm('Reset all progress? This clears saved quiz scores and locks modules again.')) return;
+  localStorage.removeItem('closuresStudioProgress');
+  location.reload();
+}
+
+/* ============ Exercise sandbox (safe-ish console capture) ============ */
+function runExercise(codeId, outId){
+  var code = document.getElementById(codeId).value;
+  var outEl = document.getElementById(outId);
+  var logs = [];
+  var fakeConsole = { log: function(){ logs.push(Array.prototype.slice.call(arguments).map(String).join(' ')); } };
+  outEl.classList.remove('err');
+  try{
+    var fn = new Function('console', code);
+    fn(fakeConsole);
+    outEl.textContent = logs.length ? logs.join('\n') : '(no console.log output)';
+  }catch(e){
+    outEl.classList.add('err');
+    outEl.textContent = (logs.length ? logs.join('\n') + '\n' : '') + '⚠ ' + e.message;
+  }
+}
+
+function resetExercise(codeId, defaultVal){
+  document.getElementById(codeId).value = defaultVal;
+}
+
+function toggleHint(id){
+  var el = document.getElementById(id);
+  el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+
+function pulseBox(id){
+  var el = document.getElementById(id);
+  el.style.filter = 'brightness(1.4)';
+  setTimeout(function(){ el.style.filter = ''; }, 400);
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+/* init on load */
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('module-1').classList.add('active');
+  buildQuiz(1);
+  updateJar();
+  updateTopProgress();
+  if(progress.challengeDone){ document.getElementById('final').style.display = 'block'; }
+});
+</script>
+</body>
+</html>
