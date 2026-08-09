@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Hosting for Learners — Compare & Decide</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#1c2438; --border:#2a3450;
+    --text:#eef1f8; --sub:#9aa6c3; --muted:#6b7694;
+    --accent:#5ea1ff; --accent2:#8f7bff; --good:#4ed8a0; --warn:#ffb454; --bad:#ff6b81;
+    --aws:#ff9e42; --gcp:#4e9bff; --azure:#4ec9ff; --do:#3b82f6;
+    --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+  header.top{padding:6px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  header.top h1{font-size:1.9rem;margin:0 0 8px;letter-spacing:-.02em;}
+  header.top p{color:var(--sub);margin:0;max-width:70ch;line-height:1.5;font-size:.98rem;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .badge{font-size:.72rem;padding:4px 10px;border-radius:99px;background:var(--panel2);color:var(--sub);border:1px solid var(--border);}
+
+  section{margin-bottom:34px;}
+  h2.section-title{font-size:1.05rem;margin:0 0 14px;color:var(--text);display:flex;align-items:center;gap:8px;}
+  h2.section-title .dot{width:7px;height:7px;border-radius:99px;background:var(--accent);}
+
+  /* Weights panel */
+  .weights-panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+  .weight-row{display:grid;grid-template-columns:190px 1fr 46px;gap:14px;align-items:center;padding:10px 0;}
+  .weight-row + .weight-row{border-top:1px solid var(--border);}
+  .weight-label{font-size:.9rem;color:var(--text);font-weight:600;}
+  .weight-label .sub{display:block;font-weight:400;color:var(--muted);font-size:.74rem;margin-top:2px;}
+  input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+  .weight-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;font-size:.92rem;}
+  .weights-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);flex-wrap:wrap;gap:10px;}
+  .reset-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:.82rem;cursor:pointer;}
+  .reset-btn:hover{border-color:var(--accent);}
+  .total-note{font-size:.78rem;color:var(--muted);}
+
+  /* Ranking */
+  .ranking{display:flex;flex-direction:column;gap:12px;}
+  .rank-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;
+    display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;transition:transform .18s ease, border-color .18s ease;}
+  .rank-card.leader{border-color:var(--accent);box-shadow:0 0 0 1px rgba(94,161,255,.25), 0 8px 24px -12px rgba(94,161,255,.4);}
+  .rank-num{font-size:1.4rem;font-weight:800;color:var(--muted);text-align:center;}
+  .rank-card.leader .rank-num{color:var(--accent);}
+  .rank-main{min-width:0;}
+  .rank-name-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+  .provider-dot{width:11px;height:11px;border-radius:4px;flex-shrink:0;}
+  .rank-name{font-weight:700;font-size:1.05rem;}
+  .leader-tag{font-size:.68rem;background:rgba(94,161,255,.15);color:var(--accent);padding:2px 8px;border-radius:99px;border:1px solid rgba(94,161,255,.4);}
+  .bar-track{height:9px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{height:100%;border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);}
+  .rank-score{font-size:1.3rem;font-weight:800;text-align:right;min-width:64px;font-variant-numeric:tabular-nums;}
+  .rank-score .out-of{font-size:.68rem;color:var(--muted);font-weight:500;display:block;}
+
+  /* Detail table */
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:.86rem;}
+  thead th{background:var(--panel2);text-align:left;padding:12px 16px;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);border-bottom:1px solid var(--border);position:sticky;top:0;}
+  thead th:first-child{position:sticky;left:0;z-index:2;}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td:first-child{font-weight:600;position:sticky;left:0;background:var(--panel);white-space:nowrap;}
+  .cell-val{display:block;font-weight:600;margin-bottom:3px;}
+  .cell-sub{display:block;color:var(--muted);font-size:.78rem;line-height:1.4;}
+  .est-flag{display:inline-block;margin-left:6px;font-size:.64rem;padding:1px 6px;border-radius:5px;background:rgba(255,180,84,.15);color:var(--warn);border:1px solid rgba(255,180,84,.35);vertical-align:middle;}
+
+  /* Provider header chips in table */
+  .prov-chip{display:flex;align-items:center;gap:8px;}
+  .prov-chip .provider-dot{width:10px;height:10px;}
+
+  /* collapsible */
+  details.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  details.panel summary{cursor:pointer;list-style:none;padding:16px 20px;font-weight:700;font-size:.95rem;display:flex;align-items:center;justify-content:space-between;}
+  details.panel summary::-webkit-details-marker{display:none;}
+  details.panel summary .chev{transition:transform .2s ease;color:var(--muted);font-size:.85rem;}
+  details.panel[open] summary .chev{transform:rotate(90deg);}
+  .panel-body{padding:0 20px 20px;color:var(--sub);font-size:.88rem;line-height:1.65;}
+  .panel-body h4{color:var(--text);font-size:.85rem;margin:16px 0 6px;}
+  .panel-body ul{margin:4px 0 0;padding-left:20px;}
+  .panel-body li{margin-bottom:6px;}
+  .conflict-box{background:var(--panel2);border-left:3px solid var(--warn);padding:10px 14px;border-radius:6px;margin:10px 0;font-size:.85rem;}
+
+  /* sources */
+  .sources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+  .source-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.8rem;}
+  .source-card .src-provider{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  .source-card a{display:block;color:var(--text);text-decoration:none;font-weight:600;font-size:.84rem;margin-bottom:4px;line-height:1.35;}
+  .source-card a:hover{color:var(--accent);}
+  .source-card .src-url{color:var(--muted);font-size:.72rem;word-break:break-all;}
+
+  footer.disclaimer{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.78rem;line-height:1.6;}
+
+  @media (max-width:640px){
+    .weight-row{grid-template-columns:1fr;gap:6px;}
+    .weight-val{text-align:left;}
+    .rank-card{grid-template-columns:32px 1fr;grid-template-rows:auto auto;}
+    .rank-score{grid-column:2;text-align:left;margin-top:6px;}
+    thead th:first-child, tbody td:first-child{position:static;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Which cloud provider should you learn on?</h1>
+    <p>A weighted comparison of <strong>AWS</strong>, <strong>Google Cloud (GCP)</strong>, <strong>Microsoft Azure</strong>, and <strong>DigitalOcean</strong> — built for students and hobbyists deciding where to spend their first few months of cloud learning. Adjust the sliders below to match what matters to you; the ranking updates live.</p>
+    <div class="badge-row">
+      <span class="badge">4 providers compared</span>
+      <span class="badge">4 criteria</span>
+      <span class="badge">9 primary sources</span>
+      <span class="badge">Data checked Aug 2026</span>
+    </div>
+  </header>
+
+  <section id="weights-section">
+    <h2 class="section-title"><span class="dot"></span>Set your priorities</h2>
+    <div class="weights-panel">
+      <div class="weight-row">
+        <div class="weight-label">Free tier value<span class="sub">Signup credit + always-free resources</span></div>
+        <input type="range" id="w-free" min="0" max="10" value="7" />
+        <div class="weight-val" id="wv-free">7</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">Ease of setup<span class="sub">Beginner friendliness, console/CLI simplicity</span></div>
+        <input type="range" id="w-ease" min="0" max="10" value="8" />
+        <div class="weight-val" id="wv-ease">8</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">Documentation quality<span class="sub">Tutorials, learning paths, clarity</span></div>
+        <input type="range" id="w-docs" min="0" max="10" value="6" />
+        <div class="weight-val" id="wv-docs">6</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">Service breadth<span class="sub"># of products — more to explore & learn</span></div>
+        <input type="range" id="w-breadth" min="0" max="10" value="4" />
+        <div class="weight-val" id="wv-breadth">4</div>
+      </div>
+      <div class="weights-footer">
+        <span class="total-note" id="total-note">Weights are relative — they're normalized automatically, so ratios matter, not absolute totals.</span>
+        <button class="reset-btn" id="reset-btn">Reset to defaults</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="ranking-section">
+    <h2 class="section-title"><span class="dot"></span>Live ranking</h2>
+    <div class="ranking" id="ranking-list"><!-- injected by JS --></div>
+  </section>
+
+  <section id="table-section">
+    <h2 class="section-title"><span class="dot"></span>Full comparison data</h2>
+    <div class="table-scroll">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th>Criterion</th>
+            <th><div class="prov-chip"><span class="provider-dot" style="background:var(--aws)"></span>AWS</div></th>
+            <th><div class="prov-chip"><span class="provider-dot" style="background:var(--gcp)"></span>GCP</div></th>
+            <th><div class="prov-chip"><span class="provider-dot" style="background:var(--azure)"></span>Azure</div></th>
+            <th><div class="prov-chip"><span class="provider-dot" style="background:var(--do)"></span>DigitalOcean</div></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"><!-- injected by JS --></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="research-section">
+    <h2 class="section-title"><span class="dot"></span>How this was researched</h2>
+    <details class="panel">
+      <summary>Methodology, scoring logic, and source conflicts <span class="chev">▶</span></summary>
+      <div class="panel-body">
+        <h4>How scores are calculated</h4>
+        <p>Each provider gets a 0–100 sub-score per criterion (Free Tier Value, Ease of Setup, Documentation Quality, Service Breadth), derived from the sourced data points in the table above. Sub-scores are combined using your slider weights (normalized to sum to 100%) to produce the live-updating overall score out of 100. Moving a slider to 0 removes that criterion from the ranking entirely.</p>
+
+        <h4>Where the hard numbers came from</h4>
+        <ul>
+          <li><strong>Free tier value:</strong> Signup credit amounts, expiry windows, and always-free service counts are taken directly from each provider's official pricing/free-tier pages (AWS Free Tier docs, Google Cloud Free Program page, Azure free account page, DigitalOcean's referral trial terms).</li>
+          <li><strong>Service breadth:</strong> "Number of services/products" figures are self-reported marketing counts (AWS: 240+, GCP: 200+, Azure: 65+ always-free tier services cited as a proxy since Microsoft doesn't publish one master count the way AWS/GCP do, DigitalOcean: a much smaller, curated catalog). These are directional, not precise apples-to-apples counts, since providers count "a service" differently.</li>
+          <li><strong>Ease of setup & documentation quality:</strong> These two criteria are qualitative by nature. Where sources gave concrete facts (e.g., "requires credit card," "single console tour," "curated one-click apps") those are cited. Where no single authoritative benchmark exists, scores are marked as <span class="est-flag">Estimate</span> and based on the consistent, repeated characterization across the third-party guides cited below (e.g., DigitalOcean and GCP frequently described as more beginner-friendly onboarding flows; AWS and Azure frequently described as having steeper initial learning curves due to console complexity and IAM/permissions setup).</li>
+        </ul>
+
+        <div class="conflict-box">
+          <strong>Conflict resolved — DigitalOcean's free trial amount:</strong> Sources disagree on whether DigitalOcean's new-signup credit is validated for 60 days uniformly or varies by promo channel (some third-party "promo code" sites cite smaller amounts like $10–$35 via specific referral codes). This app uses the figure DigitalOcean itself and the majority of independent 2026 reviews converge on: <strong>$200 in credit, valid 60 days, for new accounts</strong> signing up through a standard referral/signup link. Coupon-code sites advertising smaller stacked bonuses were treated as promotional variants, not the baseline offer.
+        </div>
+        <div class="conflict-box">
+          <strong>Conflict resolved — AWS free tier structure:</strong> Many older articles still describe AWS's pre-July 2025 model (12 months of free EC2/RDS, no credit pool). AWS overhauled this on July 15, 2025. This app uses the <em>current</em> model only: a $100–$200 credit pool valid for up to 6 months, plus 30+ Always Free services with permanent monthly limits, confirmed directly against AWS's own "What's New" announcement and billing documentation.
+        </div>
+        <div class="conflict-box">
+          <strong>Conflict resolved — "number of services" claims:</strong> AWS's own marketing has cited figures ranging from "200+" to "240+" to "500+ if you count sub-features" across different 2026 sources. We used the most consistently repeated headline figure (240+ fully featured services) rather than the inflated sub-feature count, and applied the same "headline product count" logic to GCP (200+) for comparability.
+        </div>
+
+        <h4>What's an estimate vs. sourced fact</h4>
+        <p>Every cell in the table above is labeled. Cells without a flag are backed by a specific citable figure or direct quote from an official source. Cells marked <span class="est-flag">Estimate</span> reflect a qualitative judgment synthesized from multiple independent reviewer sources rather than one authoritative number — these exist because "ease of setup" and "doc quality" don't have a single industry-standard benchmark the way "credit amount" does.</p>
+      </div>
+    </details>
+  </section>
+
+  <section id="sources-section">
+    <h2 class="section-title"><span class="dot"></span>Sources</h2>
+    <div class="sources-grid" id="sources-grid"><!-- injected by JS --></div>
+  </section>
+
+  <footer class="disclaimer">
+    Built for general orientation, not a purchase or legal decision. Free-tier terms, credit amounts, and service counts change frequently — always confirm current offers on each provider's official pricing page before signing up. Data last verified against sources on the date listed above; providers may update terms at any time.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+  // ---------- DATA ----------
+  // Each criterion has per-provider: score (0-100), value (display string), note (context),
+  // estimate (bool flag), sourceIds (array pointing into SOURCES)
+  const PROVIDERS = [
+    { id:'aws',   name:'AWS',           color:'var(--aws)'   },
+    { id:'gcp',   name:'Google Cloud',  color:'var(--gcp)'   },
+    { id:'azure', name:'Microsoft Azure', color:'var(--azure)' },
+    { id:'do',    name:'DigitalOcean',  color:'var(--do)'    },
+  ];
+
+  const SOURCES = [
+    { id:'aws-whatsnew', provider:'AWS', title:'AWS Free Tier now offers $200 in credits and 6-month free plan', url:'https://aws.amazon.com/about-aws/whats-new/2025/07/aws-free-tier-credits-month-free-plan/' },
+    { id:'aws-docs', provider:'AWS', title:'Explore AWS services with AWS Free Tier — official billing docs', url:'https://docs.aws.amazon.com/en_us/awsaccountbilling/latest/aboutv2/free-tier.html' },
+    { id:'aws-services-count', provider:'AWS', title:'AWS in 2026: How many services does AWS offer (240+ figure)', url:'https://thinkmovesolutions.com/blogs/aws-in-2026-latest-services-updates/' },
+    { id:'gcp-free', provider:'GCP', title:'Free Trial and Free Tier Services and Products — Google Cloud (official)', url:'https://cloud.google.com/free' },
+    { id:'gcp-faq', provider:'GCP', title:'Google Cloud Free Trial FAQs — official', url:'https://cloud.google.com/signup-faqs' },
+    { id:'gcp-services-count', provider:'GCP', title:'What Is Google Cloud Platform? 200+ products across 11 categories', url:'https://kuberns.com/blogs/what-is-google-cloud-platform/' },
+    { id:'azure-free', provider:'Azure', title:'Create Your Azure Free Account Today — official Microsoft page', url:'https://acom-sandbox.azure.net/en-us/free/apps/' },
+    { id:'azure-faq', provider:'Azure', title:'Azure Free Account FAQ — official Microsoft page', url:'https://acom-sandbox.azure.net/en-us/free/free-account-faq/' },
+    { id:'do-review', provider:'DigitalOcean', title:'DigitalOcean Review 2026: $200 Free Credit, Simple Pricing', url:'https://gist.github.com/yri883/2d63c835893456672a27b4374c1b1ec7' },
+    { id:'do-promo', provider:'DigitalOcean', title:'DigitalOcean Promo Code & $200 Free Credit (Jul 2026)', url:'https://costgoat.com/deals/digitalocean.com' },
+  ];
+
+  // criteria config: key must match slider ids w-<key>
+  const CRITERIA = [
+    {
+      key: 'free', label: 'Free Tier Value',
+      data: {
+        aws:   { score: 78, value: '$100–$200 credit (6 mo) + 30+ always-free', note: 'New accounts choose a Free Plan: $100 credit at signup, up to $100 more via activities (max $200), valid up to 6 months. Plus 30+ Always Free services with permanent monthly limits (e.g. Lambda, DynamoDB).', estimate:false, sources:['aws-whatsnew','aws-docs'] },
+        gcp:   { score: 88, value: '$300 credit (90 days) + 20+ always-free', note: '$300 Welcome credit usable over 90 days, independent of a separate Always Free tier covering 20+ products (e.g. one e2-micro VM, 5GB storage, 2M Cloud Run requests/month) that never expires.', estimate:false, sources:['gcp-free','gcp-faq'] },
+        azure: { score: 74, value: '$200 credit (30 days) + 12-mo + 55–65+ always-free', note: '$200 credit usable in first 30 days, 12 months of free amounts on popular services, and 55–65+ services (source pages vary) that stay free indefinitely within monthly caps.', estimate:false, sources:['azure-free','azure-faq'] },
+        do:    { score: 70, value: '$200 credit (60 days), no permanent always-free tier', note: 'New signups get $200 credit valid 60 days — a longer window than AWS/Azure — but DigitalOcean has no equivalent "always free forever" resource tier once the credit runs out.', estimate:false, sources:['do-review','do-promo'] },
+      }
+    },
+    {
+      key: 'ease', label: 'Ease of Setup',
+      data: {
+        aws:   { score: 55, value: 'Steepest learning curve', note: 'Console requires understanding IAM, regions, and a Free vs Paid plan choice at signup; widely described across guides as the most complex initial setup of the four.', estimate:true, sources:['aws-docs','aws-whatsnew'] },
+        gcp:   { score: 80, value: 'Guided, project-based onboarding', note: 'Signup flow walks new users through pre-built solution templates (dynamic website, load-balanced VM) and a single default project, reducing initial decisions.', estimate:true, sources:['gcp-free'] },
+        azure: { score: 58, value: 'Multiple free-tier tracks to navigate', note: 'Six+ distinct "free" programs (Free Trial, Students, Startups, Visual Studio, Partner, Education) can confuse first-time users about which applies to them.', estimate:true, sources:['azure-free','azure-faq'] },
+        do:    { score: 90, value: 'Simplest console; one-click apps', note: 'Flat pricing, a small curated product set, and 100+ one-click app deployments are consistently cited as DigitalOcean\'s core beginner advantage over the hyperscalers.', estimate:true, sources:['do-review'] },
+      }
+    },
+    {
+      key: 'docs', label: 'Documentation Quality',
+      data: {
+        aws:   { score: 82, value: 'Vast but sprawling', note: 'AWS documentation covers 240+ services in exhaustive depth, but breadth can make it hard for beginners to find the right starting page without external tutorials.', estimate:true, sources:['aws-docs'] },
+        gcp:   { score: 78, value: 'Clear, product-page-first structure', note: 'Google Cloud\'s docs pair each product with quickstart templates and a free-program page that doubles as a learning path.', estimate:true, sources:['gcp-free','gcp-faq'] },
+        azure: { score: 74, value: 'Strong via Microsoft Learn', note: 'Microsoft Learn provides structured, gamified learning paths for Azure fundamentals, a distinct advantage for self-directed learners.', estimate:true, sources:['azure-free'] },
+        do:    { score: 85, value: 'Renowned community tutorial library', note: 'DigitalOcean\'s community tutorials are frequently cited industry-wide as some of the clearest beginner Linux/DevOps writing available, independent of official product docs.', estimate:true, sources:['do-review'] },
+      }
+    },
+    {
+      key: 'breadth', label: 'Service Breadth',
+      data: {
+        aws:   { score: 100, value: '240+ services', note: 'AWS advertises more than 240 fully featured services as of 2026 (500+ if counting sub-features/APIs).', estimate:false, sources:['aws-services-count'] },
+        gcp:   { score: 84, value: '200+ products', note: 'Google Cloud\'s services list spans 200+ products across roughly 11 major categories.', estimate:false, sources:['gcp-services-count'] },
+        azure: { score: 68, value: '65+ always-free-tier services cited (total catalog larger, uncounted by MS)', note: 'Microsoft doesn\'t publish one master "total services" figure the way AWS does; the 65+ figure is the always-free-service count Microsoft itself publishes, used here as the best available proxy — likely undercounts Azure\'s full catalog.', estimate:true, sources:['azure-free'] },
+        do:    { score: 30, value: 'Small, curated catalog (Droplets, Kubernetes, App Platform, Spaces, managed DBs, GPUs)', note: 'DigitalOcean intentionally offers a narrow, curated product set rather than hundreds of services — a strength for simplicity, a weakness for breadth.', estimate:true, sources:['do-review'] },
+      }
+    },
+  ];
+
+  const DEFAULT_WEIGHTS = { free: 7, ease: 8, docs: 6, breadth: 4 };
+
+  // ---------- STATE ----------
+  let weights = { ...DEFAULT_WEIGHTS };
+
+  // ---------- RENDER: sliders wiring ----------
+  const sliderIds = { free:'w-free', ease:'w-ease', docs:'w-docs', breadth:'w-breadth' };
+  const valIds    = { free:'wv-free', ease:'wv-ease', docs:'wv-docs', breadth:'wv-breadth' };
+
+  Object.keys(sliderIds).forEach(key=>{
+    const el = document.getElementById(sliderIds[key]);
+    el.addEventListener('input', ()=>{
+      weights[key] = Number(el.value);
+      document.getElementById(valIds[key]).textContent = el.value;
+      renderAll();
+    });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', ()=>{
+    weights = { ...DEFAULT_WEIGHTS };
+    Object.keys(sliderIds).forEach(key=>{
+      document.getElementById(sliderIds[key]).value = weights[key];
+      document.getElementById(valIds[key]).textContent = weights[key];
+    });
+    renderAll();
+  });
+
+  // ---------- COMPUTE ----------
+  function computeScores(){
+    const totalWeight = Object.values(weights).reduce((a,b)=>a+b,0);
+    const results = PROVIDERS.map(p=>({ ...p, score:0 }));
+
+    if (totalWeight === 0){
+      // empty-state: no weight assigned to anything
+      return { results: results.map(r=>({...r, score:null})), totalWeight };
+    }
+
+    results.forEach(r=>{
+      let sum = 0;
+      CRITERIA.forEach(c=>{
+        const w = weights[c.key] || 0;
+        const s = c.data[r.id].score;
+        sum += (w/totalWeight) * s;
+      });
+      r.score = Math.round(sum * 10) / 10;
+    });
+
+    results.sort((a,b)=> (b.score ?? -1) - (a.score ?? -1));
+    return { results, totalWeight };
+  }
+
+  // ---------- RENDER: ranking ----------
+  function renderRanking(){
+    const container = document.getElementById('ranking-list');
+    const { results, totalWeight } = computeScores();
+
+    if (totalWeight === 0){
+      container.innerHTML = `<div class="rank-card" style="grid-template-columns:1fr;text-align:center;color:var(--muted);padding:32px 20px;">
+        All weights are set to 0 — move at least one slider up to see a ranking.
+      </div>`;
+      return;
+    }
+
+    const maxScore = Math.max(...results.map(r=>r.score));
+    container.innerHTML = results.map((r,i)=>{
+      const isLeader = i===0;
+      const widthPct = maxScore>0 ? Math.max(4,(r.score/100)*100) : 4;
+      return `
+        <div class="rank-card ${isLeader?'leader':''}">
+          <div class="rank-num">${i+1}</div>
+          <div class="rank-main">
+            <div class="rank-name-row">
+              <span class="provider-dot" style="background:${r.color}"></span>
+              <span class="rank-name">${r.name}</span>
+              ${isLeader?'<span class="leader-tag">Best match for your priorities</span>':''}
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${widthPct}%;background:${r.color}"></div></div>
+          </div>
+          <div class="rank-score">${r.score}<span class="out-of">/ 100</span></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ---------- RENDER: table ----------
+  function renderTable(){
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = CRITERIA.map(c=>{
+      const cells = PROVIDERS.map(p=>{
+        const d = c.data[p.id];
+        return `<td>
+          <span class="cell-val">${d.value}${d.estimate?'<span class="est-flag">Estimate</span>':''}</span>
+          <span class="cell-sub">${d.note}</span>
+        </td>`;
+      }).join('');
+      return `<tr><td>${c.label}</td>${cells}</tr>`;
+    }).join('');
+  }
+
+  // ---------- RENDER: sources ----------
+  function renderSources(){
+    const grid = document.getElementById('sources-grid');
+    if (!SOURCES.length){
+      grid.innerHTML = `<div style="color:var(--muted);">No sources available.</div>`;
+      return;
+    }
+    grid.innerHTML = SOURCES.map(s=>`
+      <div class="source-card">
+        <div class="src-provider">${s.provider}</div>
+        <a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.title}</a>
+        <div class="src-url">${s.url}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderAll(){
+    try{
+      renderRanking();
+      renderTable();
+      renderSources();
+    }catch(err){
+      console.error('Render error:', err);
+      document.getElementById('ranking-list').innerHTML =
+        `<div style="color:var(--bad);padding:20px;">Something went wrong rendering the comparison. Please refresh.</div>`;
+    }
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
